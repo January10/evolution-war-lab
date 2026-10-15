@@ -1,186 +1,49 @@
-name: Pixel Frontline - autonomous development every 30 minutes
+name: Pixel Frontline - manual QA only (ChatGPT owns development)
 
+# Development is performed by ChatGPT's hourly task, NOT by GitHub Copilot,
+# Codex CLI, an API coding agent or a GitHub Actions schedule.
+# Manual verification remains available; regular push/PR CI runs on the
+# development branch through .github/workflows/ci.yml.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/autodev-30m.yml'
-  schedule:
-    - cron: '13,43 * * * *'
 
 permissions:
   contents: read
 
-concurrency:
-  group: pixel-frontline-autodev-30m
-  cancel-in-progress: false
-
 jobs:
-  develop:
-    name: AI edits only (no repository write access)
+  verify:
+    name: Verify current development branch (no code changes)
     runs-on: ubuntu-24.04
-    timeout-minutes: 13
-    permissions:
-      contents: read
-      copilot-requests: write
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ai/evolution-war-lab-autodev
-          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Record starting development commit
-        shell: bash
-        run: |
-          git rev-parse HEAD > "$RUNNER_TEMP/autodev-base-sha"
-          echo "Starting branch: $(cat "$RUNNER_TEMP/autodev-base-sha")"
-      - name: Make one actual improvement with Codex or Copilot CLI
-        shell: bash
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          if [ -n "$OPENAI_API_KEY" ]; then
-            echo 'Executor: Codex (repository OPENAI_API_KEY secret)'
-            npm install --global @openai/codex
-            codex exec --sandbox workspace-write --ask-for-approval never --skip-git-repo-check - < .automation/AGENT_TASK.md
-          else
-            echo 'Executor: GitHub Copilot CLI (repository GITHUB_TOKEN; requires Copilot entitlement)'
-            npm install --global @github/copilot
-            copilot -p "$(cat .automation/AGENT_TASK.md)" -s --no-ask-user \
-              --allow-tool=read --allow-tool=write \
-              --allow-tool='shell(git status)' --allow-tool='shell(git diff)' \
-              --allow-tool='shell(npm test)' --allow-tool='shell(npm run build)' \
-              --deny-tool='shell(git push)' --deny-tool='shell(git commit)' \
-              --deny-tool='write(.github/workflows)'
-          fi
-      - name: Freeze proposed code patch and scope-check it
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add -A
-          python3 scripts/autodev_guard.py
-          git diff --cached --binary > "$RUNNER_TEMP/autodev.patch"
-          cp "$RUNNER_TEMP/autodev.patch" autodev.patch
-          cp "$RUNNER_TEMP/autodev-base-sha" autodev-base-sha
-          sha256sum autodev.patch > autodev-patch.sha256
-          cat autodev-patch.sha256
-      - uses: actions/upload-artifact@v4
-        with:
-          name: proposed-patch
-          path: |
-            autodev.patch
-            autodev-base-sha
-            autodev-patch.sha256
-          if-no-files-found: error
-          retention-days: 7
-
-  validate:
-    name: Independent Node and real browser playtest
-    needs: develop
-    runs-on: ubuntu-24.04
-    timeout-minutes: 12
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ai/evolution-war-lab-autodev
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/download-artifact@v4
-        with:
-          name: proposed-patch
-          path: _autodev_artifacts
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Require matching parent and recheck source patch
-        shell: bash
-        run: |
-          set -euo pipefail
-          cmp <(git rev-parse HEAD) _autodev_artifacts/autodev-base-sha
-          (cd _autodev_artifacts && sha256sum -c autodev-patch.sha256)
-          git apply --check _autodev_artifacts/autodev.patch
-          git apply _autodev_artifacts/autodev.patch
-          git add -A src test docs/ROADMAP.md ITERATION_LOG.md README.md package.json
-          python3 scripts/autodev_guard.py
-      - name: Run actual tests and build
+      - name: Tests, build, simulated long-run diagnostics
         run: |
           npm test
           npm run build
           npm run soak
           npm run difficulty
-      - name: Install Chromium for browser playtest
+      - name: Install Chromium for actual HTML browser playtest
         run: |
           python -m pip install 'playwright==1.55.0'
           python -m playwright install --with-deps chromium
-      - name: Play built HTML in a real browser before publishing
+      - name: Browser input playtest of built HTML
         run: |
           python scripts/autodev_playtest.py
           python scripts/browser_soak.py
-      - name: Record validated patch hash
-        shell: bash
-        run: |
-          set -euo pipefail
-          cp _autodev_artifacts/autodev-patch.sha256 validation.sha256
       - uses: actions/upload-artifact@v4
-        with:
-          name: validated-patch-hash
-          path: validation.sha256
-          if-no-files-found: error
-          retention-days: 7
-      - name: Retain real browser screenshots for audit
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: real-browser-evidence
+          name: manual-browser-evidence
           path: qa-output/
           if-no-files-found: warn
           retention-days: 7
-
-  publish:
-    name: Push verified source to existing PR branch
-    needs: validate
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ai/evolution-war-lab-autodev
-          fetch-depth: 0
-          persist-credentials: true
-      - uses: actions/download-artifact@v4
-        with:
-          name: proposed-patch
-          path: _autodev_artifacts
-      - uses: actions/download-artifact@v4
-        with:
-          name: validated-patch-hash
-          path: _autodev_validation
-      - name: Only publish exact independently-tested bytes
-        shell: bash
-        run: |
-          set -euo pipefail
-          cmp <(git rev-parse HEAD) _autodev_artifacts/autodev-base-sha
-          cmp _autodev_artifacts/autodev-patch.sha256 _autodev_validation/validation.sha256
-          (cd _autodev_artifacts && sha256sum -c autodev-patch.sha256)
-          git apply --check _autodev_artifacts/autodev.patch
-          git apply _autodev_artifacts/autodev.patch
-          git add -A src test docs/ROADMAP.md ITERATION_LOG.md README.md package.json
-          python3 scripts/autodev_guard.py
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'feat(autodev): validated Pixel Frontline iteration'
-          git push origin HEAD:refs/heads/ai/evolution-war-lab-autodev
-          echo "Pushed $(git rev-parse HEAD) to ai/evolution-war-lab-autodev; PR #1 remains open."
