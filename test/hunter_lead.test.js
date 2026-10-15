@@ -26,9 +26,9 @@ test('continuing in the warned direction can be hit by the intercept',()=>{
   const {game,player,hunter}=isolatedHunter();
   game.step(1/60,{moveX:1,fire:false});
   assert.equal(player.hp,120,'the predicted strike never deals instant damage');
-  run(game,32,{moveX:1,fire:false});
+  run(game,20,{moveX:1,fire:false});
   assert.ok(hunter.attackLeft>0,'windup gives reaction time');
-  run(game,6,{moveX:1,fire:false});
+  run(game,18,{moveX:1,fire:false});
   assert.equal(hunter.attackLeft,0);
   assert.equal(player.hp,110);
 });
