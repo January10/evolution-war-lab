@@ -37,8 +37,8 @@ jobs:
       - name: Make one actual improvement with Codex or Copilot CLI
         shell: bash
         env:
-          OPENAI_API_KEY: \${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: \${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [ -n "$OPENAI_API_KEY" ]; then
