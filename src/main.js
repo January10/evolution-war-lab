@@ -2,6 +2,7 @@ import {Game} from './core/game.js';
 import {WIDTH,HEIGHT,WEAPONS} from './core/data.js';
 import {renderFrame} from './ui/draw.js';
 import {Sound} from './ui/sound.js';
+import {CombatGuide} from './core/onboarding.js';
 
 const root=document.querySelector('#app');
 root.innerHTML=`
@@ -9,7 +10,7 @@ root.innerHTML=`
   <header class="masthead">
     <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div class="brand-copy"><div class="kicker">EXPERIMENTAL COMBAT / 001</div><h1>EVOLUTION <span>WAR LAB</span></h1><p>PIXEL FRONTLINE <b>·</b> GENOME SURVIVAL</p></div>
-    <div class="header-actions"><span class="version">REBUILD V1.2</span><button id="mute" class="outline-btn" type="button">♪ SOUND OFF</button><button id="restart" class="outline-btn bright" type="button">↻ NEW RUN</button></div>
+    <div class="header-actions"><span class="version">REBUILD V1.2.1</span><button id="mute" class="outline-btn" type="button">♪ SOUND OFF</button><button id="restart" class="outline-btn bright" type="button">↻ NEW RUN</button></div>
   </header>
   <section class="mission-banner"><span class="pulse-light"></span><span id="phase">LIVE EXPERIMENT</span><span class="banner-sep">//</span><span id="objectives">CLEAR THE HOSTILES TO EVOLVE</span><span class="banner-end">SECTOR 07 / DEEP CHAMBER</span></section>
   <main class="layout">
@@ -23,6 +24,7 @@ root.innerHTML=`
       <div class="screen" id="screen"><canvas id="arena" width="${WIDTH}" height="${HEIGHT}" aria-label="像素风战斗竞技场">你的浏览器不支持 Canvas。</canvas>
         <div class="overlay hidden" id="upgradeOverlay" aria-live="polite"><div class="overlay-kicker">EVOLUTION POINT ACQUIRED</div><h2>选择下一代的突变</h2><p>进化不是菜单里的数字，而是下一波能活下来的能力。</p><div id="upgrades" class="upgrade-grid"></div><div class="overlay-hint">按 1 / 2 / 3 或点击突变卡片</div></div>
         <div class="overlay hidden" id="deadOverlay"><div class="overlay-kicker lost">EXPERIMENT TERMINATED</div><h2>这一代止步于此</h2><p id="deathSummary"></p><button id="retry" type="button" class="solid-btn">↻ 重新开始实验</button></div>
+        <div id="tutorial" class="combat-guide" role="status" aria-live="polite"></div>
         <div class="screen-top"><span class="chip">LIVE / ARENA 07</span><span id="comboChip" class="chip combo hidden">COMBO ×2</span></div>
         <div class="screen-bottom"><span id="waveHint">SURVIVE. ADAPT. REPEAT.</span><span>480 × 270 NATIVE PIXELS</span></div>
       </div>
@@ -41,6 +43,7 @@ root.innerHTML=`
 </div>`;
 const q=id=>document.getElementById(id);
 let game=new Game();
+let guide=new CombatGuide();
 const sound=new Sound();
 const canvas=q('arena'),ctx=canvas.getContext('2d',{alpha:false});
 const weaponItems=Object.entries(WEAPONS);
@@ -49,7 +52,7 @@ for(const btn of q('weapons').querySelectorAll('button'))btn.addEventListener('c
 const keys=new Set();let pointer=null,manual=false,lastEvent='',lastFrame=performance.now(),acc=0,frames=0,highScore=0;
 try{highScore=Number(localStorage.getItem('ewl_highscore')||0)||0;}catch{}
 
-function newRun(){game=new Game({seed:Math.floor(Math.random()*0xFFFFFFFF)});pointer=null;manual=false;keys.clear();lastEvent='已开始新一轮生存实验';updateHUD();}
+function newRun(){game=new Game({seed:Math.floor(Math.random()*0xFFFFFFFF)});guide=new CombatGuide();pointer=null;manual=false;keys.clear();lastEvent='已开始新一轮生存实验';updateHUD();}
 q('restart').addEventListener('click',newRun);q('retry').addEventListener('click',newRun);
 q('mute').addEventListener('click',()=>{const on=sound.toggle();q('mute').textContent=on?'♫ SOUND ON':'♪ SOUND OFF';});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
@@ -86,6 +89,9 @@ function updateHUD(){
   q('statRate').textContent=s.attackRate.toFixed(2)+'×';q('statPower').textContent=s.damage.toFixed(2)+'×';q('statSpeed').textContent=s.speed.toFixed(2)+'×';q('statGene').textContent=`GEN ${String(data.wave).padStart(2,'0')}`;
   q('mutations').textContent=data.mutations.length?data.mutations.map(id=>({power:'高能弹芯',rate:'神经超频',hull:'活体装甲',mobility:'推进变异',regen:'纳米修复',multishot:'扩散突变'})[id]).join(' · '):'突变序列尚未出现。';
   q('eventText').textContent=lastEvent||'战斗系统就绪';
+  const tutorial=guide.hint({time:game.time,state:data.state});
+  q('tutorial').classList.toggle('hidden',!tutorial);
+  if(tutorial)q('tutorial').textContent=`${tutorial.label} · ${tutorial.message}`;
   for(const b of q('weapons').querySelectorAll('button')){const selected=b.dataset.weapon===data.weapon;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));}
   const upgradeVisible=data.state==='upgrade';
   if(upgradeVisible && q('upgradeOverlay').dataset.wave!==String(data.wave)){
@@ -98,7 +104,9 @@ function updateHUD(){
   if(data.state==='dead')q('deathSummary').textContent=`第 ${data.wave} 波 · ${data.kills} 次击杀 · ${data.score} 分 · 最高 ${Math.max(highScore,data.score)} 分`;
 }
 function processEvents(){
-  for(const e of game.drainEvents()){
+  const events=game.drainEvents();
+  guide.observe({events,time:game.time,playing:game.state==='playing'});
+  for(const e of events){
     sound.onEvent(e);
     if(e.type==='wave')lastEvent=`第 ${e.wave} 波敌人已接近`;
     if(e.type==='wave-clear')lastEvent=`第 ${e.wave} 波清除成功，选择变异`;
@@ -119,11 +127,13 @@ function processEvents(){
 function frame(now){
   const delta=Math.min(.08,(now-lastFrame)/1000);lastFrame=now;
   acc+=delta;
+  const moveX=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));
+  const moveY=Number(keys.has('KeyS')||keys.has('ArrowDown'))-Number(keys.has('KeyW')||keys.has('ArrowUp'));
+  guide.observe({moveX,moveY,playing:game.state==='playing',time:game.time});
   let loops=0;
   while(acc>=1/60&&loops++<6){
     game.step(1/60,{
-      moveX:Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),
-      moveY:Number(keys.has('KeyS')||keys.has('ArrowDown'))-Number(keys.has('KeyW')||keys.has('ArrowUp')),
+      moveX,moveY,
       dash:keys.has('ShiftLeft')||keys.has('ShiftRight'),
       aim:manual?pointer:null
     });

@@ -1,4 +1,4 @@
-# Evolution War Lab — Pixel Frontline (Rebuild V1.2)
+# Evolution War Lab — Pixel Frontline (Rebuild V1.2.1)
 
 A playable, **freshly rebuilt** arena survival game using HTML Canvas and vanilla JavaScript. No runtime dependencies, no game asset downloads. Inspired by the separate Evolution War Lab V0.x simulation prototypes, but this codebase is rebuilt around player agency and arcade feedback, not the old 3D simulation dashboard.
 
@@ -76,3 +76,13 @@ Validation: 20/20 Node tests passed; `npm run build` succeeded; a Chromium brows
 At wave 4, and every fourth wave thereafter, a single golden Sentinel joins the normal hostiles. Its health increases with wave scaling. The Sentinel stops to target a **finite orthogonal cross** at the player's position, gives a 1.10s windup, then releases a bright crossing strike. Moving only along one marked lane does not escape it; moving diagonally beyond the warning stripes (or using dash iframes) does. Cross warning and actual hit geometry share the same config values. A compact boss HP bar appears on the canvas until the Sentinel dies.
 
 **Validation this iteration:** `npm test`: 25 passed / 0 failed. `npm run build`: passed. Chromium with real offline `dist/play.html` executed via `page.set_content` (direct file navigation was blocked by the isolated browser) confirmed wave 1 starts, weapon hotkeys 2/3 switch, pause works, forced wave 4 displays Sentinel HUD and cross warning, and no JS page errors. The local-file launch on a user's own PC remains unverified.
+
+## V1.2.1 — Guided first 30 combat seconds
+
+The arena now displays a compact, non-modal quick-start ribbon while a new run is young: move with WASD/arrows, use Shift dash, and change weapons with 1/2/3 (weapons auto-fire). The steps advance only when the corresponding real movement or game event happens, can be done in any order, disappear after completion or 30 seconds of active combat time, and reset on New Run. They do not block combat or mutation selection. Pauses and mutation decisions do not consume the tutorial timer. See `test/onboarding.test.js`.
+
+The tutorial is an in-game usability aid, **not** proof that an unfamiliar player can master controls in 30 seconds. An external usability playtest is still needed.
+
+## Goal-driven M1 checks
+
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the four milestone definitions, **actual** acceptance evidence and remaining blockers. The runnable deterministic stress probe is `npm run soak`: three seeded scripted-controller 600-**game-second** sessions using ordinary game input, upgrades and boss encounters. It does **not** represent 10 minutes of human play or browser execution. At V1.2.1 it revealed first-wave completion in about 3.7–4.7 seconds; pacing is the next priority.

@@ -77,3 +77,15 @@ Repository target and GitHub App installation are not configured as of initial r
 **Next smallest candidate:** Add impact pause and weapon-specific hit feedback without disrupting deterministic combat; alternatively a 20-second first-run movement/dash onboarding that teaches diagonal boss evasion.
 
 **GitHub status:** Fixed repository is `January10/evolution-war-lab`, branch `ai/evolution-war-lab-autodev`. As of this run the connector still reported no installed accounts/installations; write permission has not been verified. Attempt write separately and record its actual result; do not claim push without a commit hash.
+
+## V1.2.1 — First-30-second contextual combat onboarding (2026-10-15, hourly goal-driven iteration)
+
+**M1 goal:** make movement, dash and weapon switching discoverable during live combat instead of relying on a separate off-screen controls panel. This is an actual UI feature, not a plan.
+
+**Files changed:** `src/core/onboarding.js` (new deterministic event-driven tutorial state machine); `src/main.js` (nonblocking HUD ribbon, movement/event wiring, reset on New Run); `src/style.css` (responsive battle-overlay treatment); `scripts/build.mjs` (bundle new core module in offline build); `test/onboarding.test.js` (4 new regression tests); `scripts/soak.mjs` (new repeatable 600-second core endurance probe); `package.json`, `README.md`, `docs/ROADMAP.md` (version, reproducibility, product acceptance ledger), and CI YAML (soak regression).
+
+**Verification performed:** `npm test` **29/29 passed**, `npm run build` **passed** with `dist/index.html` and offline `dist/play.html`. Headless Chromium Playwright using **actual compiled offline HTML** loaded through `page.set_content`: initial canvas and hint, movement => dash hint, Shift dash => weapon hint, key 2 => completion, pause/resume, New Run resets hint, zero page script errors. Screenshot `onboarding-v1.2.1.png` from automation runtime (not committed). Standalone native `file://` navigation remains unverified. Three legal-input, unpaused 600-game-second **Node core** scripted controller runs (`npm run soak`, seeds 7/13/33) reached wave 26/24/28 and killed Sentinel bosses. This is not 10-min browser QA or an actual human playtest.
+
+**Finding:** the first wave can be cleared in ~3.7–4.7 seconds with simple orbiting, so progression is fast enough to interrupt onboarding with a mutation choice; tutorial is intentionally hidden while a mutation dialog is open and resumes afterward. Repeated Hull upgrades yield high effective HP late in long scripted runs. M1 remains **PARTIAL**; no novice usability study or full 10-min browser run has been completed.
+
+**Next unique goal:** improve **early-wave pacing** so first-time players have at least ~12 seconds of meaningful combat before their first evolution prompt, without an empty forced wait, and preserve deterministic wave/Boss/mutation tests. Confirm via controlled simulation and short browser QA. Do not add decorative FX before resolving this.
