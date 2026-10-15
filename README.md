@@ -109,3 +109,11 @@ All repeatable stat upgrades now use **monotone diminishing returns** after pres
 Hunters now begin a **locked, half-second warning** when they get within 75 pixels, projecting a short maximum 36-pixel lead along the player's current direction. The prediction happens once when the warning starts: turn or dash to dodge the marked square. Existing short-range hunter contact attacks still have their original windup, and the early swarm wave is unchanged. This addresses orbiting always being safe without adding enemy types or hidden instant damage.
 
 The new `test/hunter_lead.test.js` covers moving into the forecast, changing direction to evade, range limits, boundary clamping, and existing dash/contact behavior. Initial in-memory JavaScript diagnostic of the exact patched engine, **not npm or human play**, recorded in 180 game seconds, seeds 7/13/33, no-healing orbit+dash: **0/0/0 hits before** and **11/5/2 hits after**. Three 600-game-second scripted *healing* controllers on the patched engine survived, reached waves 38/27/36 and defeated 9/6/8 actual Sentinel bosses. Difficulty and newbie readability still require real player testing. GitHub CI runs the actual npm commands; see its live status rather than assuming success.
+
+## V1.2.5 — focus-safe gameplay (2026-10-15)
+
+Live combat now **automatically pauses when the game window loses focus or the tab is hidden**; press **P** to resume. This prevents unattended damage when a player switches away from the browser.
+
+The new `scripts/autodev_playtest.py` in CI uses real Chromium keyboard/mouse input for at least 24 wall-clock seconds on the built `dist/play.html`: movement, dash, all three weapons, pause, focus-loss autopause, manual aim, upgrade interactions, restart, live pixels and script errors. `scripts/browser_soak.py` separately covers 600 accelerated *game* seconds. Neither constitutes a 10-minute human playtest.
+
+The 30-minute AI development GitHub Actions workflow is configured on the default branch at `.github/workflows/autodev-30m.yml` and always edits/publishes only the existing `ai/evolution-war-lab-autodev` PR branch after independent tests; an eligible Copilot CLI account or GitHub Actions `OPENAI_API_KEY` secret is still required for successful AI generations. See `docs/AUTODEV_PIPELINE.md`. No automatic main merge.

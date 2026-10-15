@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Real wall-clock Playwright interaction with the built offline HTML.
+"""True wall-clock Playwright game play against the actual built HTML.
 
-This drives keyboard and mouse for at least 24 actual seconds. The separate
-browser_soak.py covers 600 accelerated game seconds. Neither is human testing.
+This drives keys/mouse for at least 24 real seconds, unlike 600 simulated game
+seconds. It does not claim to substitute for human novice usability studies.
 """
 import json
 import os
@@ -10,7 +10,8 @@ import shutil
 import time
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright, Error as PlaywrightError
+from playwright.sync_api import sync_playwright
+from playwright.sync_api import Error as PlaywrightError
 
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "dist/play.html"
@@ -44,6 +45,9 @@ def main():
         except PlaywrightError as exc:
             if "ERR_BLOCKED_BY_ADMINISTRATOR" not in str(exc):
                 raise
+            # Some sealed automation containers prohibit all file:// navigation.
+            # This still executes the EXACT built offline HTML in a real browser,
+            # but we must NOT claim that native file opening was verified.
             mode = "inline dist/play.html via set_content (file:// blocked)"
             page.close()
             page = browser.new_page(viewport={"width": 1280, "height": 900})
@@ -56,13 +60,14 @@ def main():
         assert time.monotonic() - start < 10, "start-to-combat exceeded 10 seconds"
         pixels = page.evaluate("""() => {
           const c=document.querySelector('#arena');const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
-          const set=new Set();for(let i=0;i<d.length;i+=400)set.add(d[i]+','+d[i+1]+','+d[i+2]);
+          const set=new Set();for(let i=0;i<d.length;i+=400)set.add(`${d[i]},${d[i+1]},${d[i+2]}`);
           return set.size;
         }""")
         assert pixels >= 5, f"canvas appears blank ({pixels} sampled colors)"
         page.screenshot(path=str(OUT / "autodev-start.png"), full_page=True)
         print("QA: game started; begin real keyboard actions", flush=True)
 
+        # Actual keyboard game input (no game.step, forced wave or fake test state).
         page.keyboard.down("d")
         page.wait_for_timeout(700)
         page.keyboard.up("d")
@@ -86,6 +91,16 @@ def main():
         page.keyboard.press("p")
         assert not snapshot(page)["paused"]
 
+        # Tab loss must not kill a novice who checks another window.
+        page.evaluate("window.dispatchEvent(new Event('blur'))")
+        auto_paused = snapshot(page)
+        assert auto_paused["paused"], auto_paused
+        page.wait_for_timeout(250)
+        assert abs(snapshot(page)["time"] - auto_paused["time"]) < .04, "focus loss did not freeze combat"
+        page.keyboard.press("p")
+        assert not snapshot(page)["paused"], "P did not resume after automatic pause"
+
+        # Manual aim interaction with actual Canvas UI.
         box = page.locator("#arena").bounding_box()
         assert box, "canvas bounding box unavailable"
         page.mouse.move(box["x"] + box["width"] * .65, box["y"] + box["height"] * .42)

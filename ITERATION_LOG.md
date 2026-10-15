@@ -123,3 +123,13 @@ Repository target and GitHub App installation are not configured as of initial r
 **Next goal:** verify short-range Hunter warning readability in real-browser play, then run continuous *wall-clock* 10 minute session; tune only if actual observations warrant it. M1 remains PARTIAL.
 
 **Verified local/browser follow-up (same V1.2.4 change):** GitHub Actions push run `38753172265` passed `npm test` / `npm run build` / `npm run soak` / `npm run difficulty`; locally Node 22 passed **41/41** tests and all same scripts. Browser Playwright `scripts/browser_soak.py` now reads version from package.json rather than the stale literal V1.2.3 and checks an isolated visible Hunter projected warning. Built `dist/play.html` via Chromium `page.set_content`: W38, 9 bosses, 37 mutation cycles in 600 *accelerated game seconds*, 0 uncaught page errors; restart passed. `src/main.js` version badge updated to V1.2.4. Full normal-speed 600 wall-clock seconds and real novice play remain UNVERIFIED.
+
+## V1.2.5 — auto-pause on focus loss and browser-play gated CI (2026-10-15)
+
+**M1 goal:** prevent an unexpected death when an active player switches browser windows, and verify the actual HTML with real keyboard/mouse inputs rather than only core simulations.
+
+**Code:** `src/main.js` clears active controls and pauses the live run when window blur/hidden-tab fires. It never accidentally resumes an already-paused game; P explicitly resumes. `scripts/autodev_playtest.py` now tests focus-loss game clock in Chromium, along with natural combat/movement, dash, all 3 weapons, manual aim, pause/restart, screenshots and JS error checks. `.github/workflows/ci.yml` runs this alongside the existing 600 accelerated game-second browser soak on GitHub.
+
+**Observed local pre-publish tests (materialized V1.2.3 source + isolated patch, not full GitHub V1.2.4+):** `npm test` 35/35 PASS; `npm run build` PASS; `npm run soak` 3 seeded 600-game-second cases PASS; `npm run difficulty` completed; Playwright 26.57 wall seconds with 37 real keyboard action cycles, first three waves/two upgrades, blur-pause/P-resume verified, 0 uncaught errors, and accelerated browser soak PASS. This container blocked native `file://`; actual built HTML was evaluated via `page.set_content` instead. Remote integrated result must be verified in GitHub CI.
+
+**Unresolved:** M1 still PARTIAL; 10-minute normal-speed session, real user comprehension/novice difficulty, local Windows file-open, and first-time player replay desire remain. Half-hour scheduled GitHub AI runner also needs verified Copilot entitlement or Actions API key; a scheduled YAML alone is not proof that code has been generated.

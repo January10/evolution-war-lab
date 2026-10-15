@@ -10,7 +10,7 @@ root.innerHTML=`
   <header class="masthead">
     <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div class="brand-copy"><div class="kicker">EXPERIMENTAL COMBAT / 001</div><h1>EVOLUTION <span>WAR LAB</span></h1><p>PIXEL FRONTLINE <b>·</b> GENOME SURVIVAL</p></div>
-    <div class="header-actions"><span class="version">REBUILD V1.2.4</span><button id="mute" class="outline-btn" type="button">♪ SOUND OFF</button><button id="restart" class="outline-btn bright" type="button">↻ NEW RUN</button></div>
+    <div class="header-actions"><span class="version">REBUILD V1.2.5</span><button id="mute" class="outline-btn" type="button">♪ SOUND OFF</button><button id="restart" class="outline-btn bright" type="button">↻ NEW RUN</button></div>
   </header>
   <section class="mission-banner"><span class="pulse-light"></span><span id="phase">LIVE EXPERIMENT</span><span class="banner-sep">//</span><span id="objectives">CLEAR THE HOSTILES TO EVOLVE</span><span class="banner-end">SECTOR 07 / DEEP CHAMBER</span></section>
   <main class="layout">
@@ -61,7 +61,16 @@ canvas.addEventListener('pointermove',e=>{pointer=mapPointer(e);});
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;manual=true;pointer=mapPointer(e);try{canvas.setPointerCapture(e.pointerId);}catch{}});
 canvas.addEventListener('pointerup',()=>{manual=false;});canvas.addEventListener('pointercancel',()=>{manual=false;});
 canvas.addEventListener('pointerleave',()=>{if(!manual)pointer=null;});
-window.addEventListener('blur',()=>{keys.clear();manual=false;});
+function pauseOnFocusLoss(){
+  keys.clear();manual=false;
+  if(game.state==='playing' && !game.paused){
+    game.togglePause();
+    lastEvent='窗口失去焦点，游戏已自动暂停 · 按 P 继续';
+    updateHUD();
+  }
+}
+window.addEventListener('blur',pauseOnFocusLoss);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseOnFocusLoss();});
 window.addEventListener('keydown',e=>{
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
   if(['Digit1','Digit2','Digit3'].includes(e.code) && !e.repeat){
