@@ -1,3 +1,69 @@
-# Evolution War Lab
+# Evolution War Lab — Pixel Frontline (Rebuild V1.1)
 
-The playable Pixel Frontline rebuild is under active development. Reviewed game source code is maintained on the `ai/evolution-war-lab-autodev` branch before merge to `main`.
+A playable, **freshly rebuilt** arena survival game using HTML Canvas and vanilla JavaScript. No runtime dependencies, no game asset downloads. Inspired by the separate Evolution War Lab V0.x simulation prototypes, but this codebase is rebuilt around player agency and arcade feedback, not the old 3D simulation dashboard.
+
+## Start
+
+Requires Node.js >=18.
+
+```sh
+npm run dev
+```
+
+Open http://127.0.0.1:5173 (or change the `PORT` environment variable).
+
+```sh
+npm test
+npm run build
+npm run preview
+```
+
+`dist/index.html` is the entrypoint for a static website. `dist/play.html` is a **single, fully offline playable HTML file** that opens directly by double-clicking, with zero installation. Deploy `dist/` to any static host, including GitHub Pages (the repository must be connected and Pages must be configured).
+
+## How to play
+
+- **WASD or arrow keys:** move your cyan prototype.
+- **Auto-fire:** automatically attacks nearest enemies, even if you do not press the mouse button.
+- **Hold left mouse button on arena:** aim precisely toward the mouse cursor.
+- **1 / 2 / 3:** switch between Pulse Rifle / Star Shotgun / Prism Beam. When a wave is complete, choose one of three mutations instead.
+- **Shift while moving:** temporary invulnerable dash.
+- **Attack warnings:** enemy strikes now lock onto an outlined red target square before landing. Move out of the square or dash through the impact. Brutes warn longer, but strike a larger area.
+- **P:** pause / resume.
+- **R:** new random-seed run.
+- **Sound toggle:** turns on synthesized WebAudio after user gesture.
+
+Clear an enemy wave, choose one of three randomized genome mutations, then try to survive the stronger next wave. Combo bonuses reward rapid kill streaks.
+
+## Architecture
+
+- `src/core/game.js`: headless fixed-delta combat, enemy behavior, wave transitions, mutations, weapon mechanics, collision and damage.
+- `src/core/data.js`: centralized balance values for weapons, enemies, upgrades.
+- `src/core/rng.js`: seeded PRNG and math utilities.
+- `src/ui/draw.js`: pixel-perfect Canvas renderer. Presentation never changes combat outcomes.
+- `src/ui/sound.js`: optional synthesized shooting/hit tones.
+- `src/main.js`: DOM, input, fixed-step loop and HUD.
+- `test/game.test.js`: deterministic behavioral regression tests.
+
+## Acceptance checklist
+
+1. [ ] Open game in browser and see a cyan unit under attack within 10 seconds.
+2. [ ] Change weapons via 1/2/3 and see different shot effects.
+3. [ ] Hold mouse left button to aim at a specific enemy.
+4. [ ] Clear wave, choose a mutation, and see next wave.
+5. [ ] Survive several waves and notice increasing enemy count and difficulty.
+6. [ ] When an enemy gets close, see a red warning square, then sidestep or dash to avoid the locked strike.
+7. [ ] Check console and performance for runtime errors.
+
+The 20 Node tests verify core combat, telegraphed strikes, dodge and invulnerability, and build. A Chromium smoke test exercised the bundled game UI, weapon hotkeys, pausing, wave-upgrade overlay, and V1.1 telegraph rendering. Standard navigation to local files/localhost was blocked by the isolated QA environment, so **verify normal launch on your own device** before publishing.
+
+## Hourly automation handoff
+
+Canonical source archive in ChatGPT Library: `/evolution-war-lab-rebuild-active.zip` (after first delivery).
+
+An hourly developer agent should first fetch that archive, read `ITERATION_LOG.md`, choose the smallest uncompleted improvement, modify and test, then publish a versioned archive back to Library. If GitHub repository access has been granted, publish to a work branch / pull request; otherwise report GitHub as blocked and **do not claim a push occurred**.
+
+## V1.1 fair-attack update (2026-10-15)
+
+Each approaching enemy now pauses to target the player's current location before attacking. A red pixel square and a progress gauge show exactly where and when damage will occur. Escape the square before the bar fills (or time an invulnerable dash). Swarms / hunters / brutes each have distinct windup times, damage radii and recovery windows. Hits interrupt the windup countdown briefly; successful evasion produces a teal feedback ring and optional sound cue.
+
+Validation: 20/20 Node tests passed; `npm run build` succeeded; a Chromium browser smoke test (injected real `dist/play.html` via `set_content` because file navigation was blocked in the isolated environment) confirmed rendering, weapon selection, pause and brute targeting with no page errors. Native `file://` opening is not verified in this environment.
