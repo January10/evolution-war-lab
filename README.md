@@ -1,4 +1,4 @@
-# Evolution War Lab — Pixel Frontline (Rebuild V1.1)
+# Evolution War Lab — Pixel Frontline (Rebuild V1.2)
 
 A playable, **freshly rebuilt** arena survival game using HTML Canvas and vanilla JavaScript. No runtime dependencies, no game asset downloads. Inspired by the separate Evolution War Lab V0.x simulation prototypes, but this codebase is rebuilt around player agency and arcade feedback, not the old 3D simulation dashboard.
 
@@ -27,7 +27,8 @@ npm run preview
 - **Hold left mouse button on arena:** aim precisely toward the mouse cursor.
 - **1 / 2 / 3:** switch between Pulse Rifle / Star Shotgun / Prism Beam. When a wave is complete, choose one of three mutations instead.
 - **Shift while moving:** temporary invulnerable dash.
-- **Attack warnings:** enemy strikes now lock onto an outlined red target square before landing. Move out of the square or dash through the impact. Brutes warn longer, but strike a larger area.
+- **Attack warnings:** normal enemies lock a red strike square before damage; dodge out or dash through impact. Brutes warn longer with larger areas.
+- **Sentinel boss:** wave 4 (and every fourth wave) includes a golden elite with a large HP bar. Its 1.10-second warning marks two intersecting fire lanes: move **diagonally off both lanes** or dash during impact. A living Sentinel blocks the next mutation.
 - **P:** pause / resume.
 - **R:** new random-seed run.
 - **Sound toggle:** turns on synthesized WebAudio after user gesture.
@@ -52,9 +53,11 @@ Clear an enemy wave, choose one of three randomized genome mutations, then try t
 4. [ ] Clear wave, choose a mutation, and see next wave.
 5. [ ] Survive several waves and notice increasing enemy count and difficulty.
 6. [ ] When an enemy gets close, see a red warning square, then sidestep or dash to avoid the locked strike.
-7. [ ] Check console and performance for runtime errors.
+7. [ ] Reach wave 4: see the unique gold Sentinel with HP bar; move diagonally out of both red cross lanes before the strike lands.
+8. [ ] Eliminate the Sentinel to unlock the next mutation choice.
+9. [ ] Check console and performance for runtime errors.
 
-The 20 Node tests verify core combat, telegraphed strikes, dodge and invulnerability, and build. A Chromium smoke test exercised the bundled game UI, weapon hotkeys, pausing, wave-upgrade overlay, and V1.1 telegraph rendering. Standard navigation to local files/localhost was blocked by the isolated QA environment, so **verify normal launch on your own device** before publishing.
+The 25 Node tests verify core combat, telegraphed strikes, dodge, Sentinel wave timing and attack geometry, and invulnerability. A Chromium smoke test exercised the bundled game UI, weapon hotkeys, pausing, wave-upgrade overlay, and V1.1 telegraph rendering. Standard navigation to local files/localhost was blocked by the isolated QA environment, so **verify normal launch on your own device** before publishing.
 
 ## Hourly automation handoff
 
@@ -67,3 +70,9 @@ An hourly developer agent should first fetch that archive, read `ITERATION_LOG.m
 Each approaching enemy now pauses to target the player's current location before attacking. A red pixel square and a progress gauge show exactly where and when damage will occur. Escape the square before the bar fills (or time an invulnerable dash). Swarms / hunters / brutes each have distinct windup times, damage radii and recovery windows. Hits interrupt the windup countdown briefly; successful evasion produces a teal feedback ring and optional sound cue.
 
 Validation: 20/20 Node tests passed; `npm run build` succeeded; a Chromium browser smoke test (injected real `dist/play.html` via `set_content` because file navigation was blocked in the isolated environment) confirmed rendering, weapon selection, pause and brute targeting with no page errors. Native `file://` opening is not verified in this environment.
+
+## V1.2 Sentinel boss update (2026-10-15)
+
+At wave 4, and every fourth wave thereafter, a single golden Sentinel joins the normal hostiles. Its health increases with wave scaling. The Sentinel stops to target a **finite orthogonal cross** at the player's position, gives a 1.10s windup, then releases a bright crossing strike. Moving only along one marked lane does not escape it; moving diagonally beyond the warning stripes (or using dash iframes) does. Cross warning and actual hit geometry share the same config values. A compact boss HP bar appears on the canvas until the Sentinel dies.
+
+**Validation this iteration:** `npm test`: 25 passed / 0 failed. `npm run build`: passed. Chromium with real offline `dist/play.html` executed via `page.set_content` (direct file navigation was blocked by the isolated browser) confirmed wave 1 starts, weapon hotkeys 2/3 switch, pause works, forced wave 4 displays Sentinel HUD and cross warning, and no JS page errors. The local-file launch on a user's own PC remains unverified.

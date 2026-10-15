@@ -56,3 +56,24 @@ Repository target and GitHub App installation are not configured as of initial r
 **Known issues:** Attack squares can overlap in crowds; tune readability and warning volume after gameplay testing. Auto-fire might kill enemies before many charges can be seen. Native file opening remains unverified on end-user hardware. GitHub installation/repository authorization remains absent; no push made.
 
 **Next candidate:** Add first elite opponent/Boss wave and a clear, differentiable attack pattern on wave 4; reuse the new warning mechanic and require tests.
+
+## V1.2.0 — Wave-4 Sentinel boss and cross-strike (2026-10-15, hourly iteration 2)
+
+**Goal:** Introduce a readable elite combat encounter and a meaningful new evasion challenge instead of merely increasing enemy HP.
+
+**Actual changes:**
+
+- `src/core/data.js`: added golden Sentinel enemy (HP 440 base, 1.10s charged cross attack, 2.35s recovery, larger reach, 23 damage, wave scaling). All cross dimensions centralized.
+- `src/core/game.js`: spawn one Sentinel every fourth wave, boss announcement events, finite horizontal/vertical damage lanes locked to the player's position, boss strike FX and death event. Boss must be killed for wave clear. Alert ordering fixed so boss message is not overwritten by the normal wave event.
+- `src/ui/draw.js`: original enlarged gold mechanical sprite, matching pixel cross-shaped warning geometry and impact burst, always-visible Sentinel HP bar.
+- `src/main.js`: version badge, boss-phase objective, arrival/strike/defeat feedback texts.
+- `test/game.test.js`: five new tests for wave-4 spawn, charged impact, diagonal dodge, unsafe single-axis dodge, and boss-gated wave completion. Also checks the boss alert occurs after the standard wave event.
+- `README.md`, `package.json`, `ITERATION_LOG.md`: document controls, acceptance checks, version and evidence.
+
+**Actual verification:** `npm test` => **25 passed, 0 failed**. `npm run build` => produced `dist/index.html` and self-contained `dist/play.html`. Chromium smoke test ran the current offline output via `page.set_content` (direct `file://` navigation returned `ERR_BLOCKED_BY_ADMINISTRATOR`): initial wave/weapon selection/pause passed, forced boss wave and visible cross warning passed, 0 browser script errors; screenshot `EWL-V1.2-Sentinel.png`. Real local double-click opening still needs validation on user's device.
+
+**Known limitations:** Sentinel only has one attack pattern; cross warning currently overlays other enemy strike squares. Visual boss smoke was done via a forced wave-4 state instead of naturally playing through the first three waves. Continue balancing elite HP and signal readability through playtesting.
+
+**Next smallest candidate:** Add impact pause and weapon-specific hit feedback without disrupting deterministic combat; alternatively a 20-second first-run movement/dash onboarding that teaches diagonal boss evasion.
+
+**GitHub status:** Fixed repository is `January10/evolution-war-lab`, branch `ai/evolution-war-lab-autodev`. As of this run the connector still reported no installed accounts/installations; write permission has not been verified. Attempt write separately and record its actual result; do not claim push without a commit hash.

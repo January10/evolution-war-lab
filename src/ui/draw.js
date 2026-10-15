@@ -73,6 +73,15 @@ function drawEnemy(ctx,e,time){
     px(ctx,-6,-5,13,11,'#43242c');px(ctx,-4,-5,9,9,bright?'#fff1e8':col);
     px(ctx,-8,-4,3,4,'#a84f49');px(ctx,5,1,3,4,'#a84f49');
     px(ctx,-1,-2,4,3,'#682e37');
+  }else if(e.kind==='sentinel'){
+    // Unique wide gold chassis, unmistakable among violet brutes.
+    px(ctx,-17,-12,35,25,'#302737');
+    px(ctx,-14,-11,29,22,bright?'#fffbdd':'#ad652f');
+    px(ctx,-10,-9,21,17,bright?'#ffffff':col);
+    px(ctx,-21,-7,7,14,'#7d4c36');px(ctx,15,-7,7,14,'#7d4c36');
+    px(ctx,-19,-10,4,4,'#ffe292');px(ctx,15,-10,4,4,'#ffe292');
+    px(ctx,-5,-5,11,10,'#24283d');px(ctx,-3,-3,7,5,'#fff4af');
+    px(ctx,-12,11,7,4,'#a26d38');px(ctx,6,11,7,4,'#a26d38');
   }else{
     px(ctx,-10,-10,21,19,'#32213e');px(ctx,-8,-8,17,15,bright?'#fff1e8':col);
     px(ctx,-9,-11,6,5,'#66348d');px(ctx,3,-11,6,5,'#66348d');
@@ -81,7 +90,7 @@ function drawEnemy(ctx,e,time){
   }
   ctx.restore();
   if(e.hp<e.maxHp && e.hp>0){
-    const bw=e.kind==='brute'?22:14;
+    const bw=e.kind==='sentinel'?38:e.kind==='brute'?22:14;
     px(ctx,x-Math.round(bw/2),y-e.radius-9,bw,2,'#381f38');
     px(ctx,x-Math.round(bw/2),y-e.radius-9,bw*clamp(e.hp/e.maxHp,0,1),2,col);
   }
@@ -91,6 +100,20 @@ function drawTelegraph(ctx,e){
   if(e.attackLeft<=0)return;
   const progress=clamp(1-e.attackLeft/e.attackTotal,0,1);
   const x=Math.round(e.attackX),y=Math.round(e.attackY),r=e.attackRadius;
+  if(ENEMIES[e.kind].pattern==='cross'){
+    const def=ENEMIES[e.kind],len=def.crossHalfLength,half=def.crossHalfWidth;
+    const color=progress>.68?'#f8d279':'#ff8f73';
+    // The dangerous footprint and its boundaries match headless hit detection.
+    px(ctx,x-len,y-half,2*len+1,2*half+1,progress>.68?'#dc4e4e70':'#9d413b53');
+    px(ctx,x-half,y-len,2*half+1,2*len+1,progress>.68?'#dc4e4e70':'#9d413b53');
+    ctx.strokeStyle=color;ctx.lineWidth=1;
+    ctx.strokeRect(x-len+.5,y-half+.5,2*len,2*half);
+    ctx.strokeRect(x-half+.5,y-len+.5,2*half,2*len);
+    px(ctx,x-16,y-19,32,3,'#53323d');
+    px(ctx,x-16,y-19,32*progress,3,color);
+    px(ctx,x-2,y-2,5,5,'#fdf3c6');
+    return;
+  }
   // Pixel-rect danger zone: brightens as the strike becomes imminent.
   px(ctx,x-r,y-r,2*r+1,2*r+1,progress>.68?'#cf2f3645':'#9c2c3440');
   ctx.strokeStyle=progress>.68?'#ffde86':'#ff7380';ctx.lineWidth=1;
@@ -129,6 +152,13 @@ function drawFx(ctx,f){
     return;
   }
   if(f.type==='recoil')return;
+  if(f.type==='boss-strike'){
+    const half=f.halfLength,wide=f.halfWidth;
+    const c=t>.45?'#ffe7ac':'#f8a15f';
+    px(ctx,f.x-half,f.y-wide,(2*half+1)*t,wide*2+1,c);
+    px(ctx,f.x-wide,f.y-half,wide*2+1,(2*half+1)*t,c);
+    return;
+  }
   if(f.type==='evade'){
     const r=5+Math.round((1-t)*12);
     ctx.strokeStyle='#87ffe2';ctx.lineWidth=2;
@@ -160,6 +190,18 @@ function drawParticles(ctx,particles){
   for(const p of particles)px(ctx,p.x,p.y,p.size,p.size,p.color);
 }
 
+function drawBossHealth(ctx,game){
+  const boss=game.enemies.find(e=>e.alive && e.kind==='sentinel');
+  if(!boss)return;
+  const x=Math.round(game.width/2)-100,y=21;
+  px(ctx,x,y,200,21,'#2b202b');
+  px(ctx,x+1,y+1,198,19,'#101b29');
+  px(ctx,x+4,y+14,192,4,'#503544');
+  px(ctx,x+4,y+14,192*clamp(boss.hp/boss.maxHp,0,1),4,'#f9bf61');
+  ctx.textAlign='center';ctx.font='bold 9px monospace';ctx.fillStyle='#ffeac2';
+  ctx.fillText('SENTINEL // '+Math.ceil(boss.hp)+' HP',game.width/2,y+10);
+}
+
 function drawCrosshair(ctx,point){
   if(!point)return;
   const x=Math.round(point.x),y=Math.round(point.y);
@@ -183,6 +225,7 @@ export function renderFrame(ctx,game,{crosshair=null}={}) {
   for(const fx of game.effects)drawFx(ctx,fx);
   drawParticles(ctx,game.particles);
   ctx.restore();
+  drawBossHealth(ctx,game);
   drawCrosshair(ctx,crosshair);
   if(game.paused){
     px(ctx,0,0,w,h,'#09131fc9');

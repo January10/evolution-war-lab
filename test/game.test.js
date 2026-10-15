@@ -199,3 +199,79 @@ test('stun delays a telegraphed attack and brutes warn longer with a larger area
   assert.equal(e.attackLeft,0);
   assert.equal(p.hp,120-ENEMIES.brute.damage);
 });
+
+function advanceToWave(game,number){
+  while(game.wave<number){
+    game.enemies=[];
+    game.step(1/60,{fire:false});
+    assert.equal(game.state,'upgrade');
+    assert.equal(game.chooseUpgrade(game.upgradeChoices[0]),true);
+  }
+}
+
+test('a single elite Sentinel arrives on wave 4, but not earlier waves',()=>{
+  const g=new Game({seed:144});
+  for(let wave=1;wave<=3;wave++){
+    assert.equal(g.enemies.filter(e=>e.kind==='sentinel').length,0);
+    if(wave<3)advanceToWave(g,wave+1);
+  }
+  advanceToWave(g,4);
+  const bosses=g.enemies.filter(e=>e.kind==='sentinel');
+  assert.equal(bosses.length,1);
+  assert.equal(g.enemies.length,13);
+  assert.ok(bosses[0].maxHp>ENEMIES.brute.hp);
+  assert.ok(g.events.some(ev=>ev.type==='boss-appeared' && ev.wave===4));
+  assert.equal(g.events.at(-1).type,'boss-appeared'); // boss alert follows the normal wave event
+});
+
+test('the Sentinel locks a visible cross, waits, then hits a stationary player',()=>{
+  const g=new Game({seed:12}),p=g.player;
+  const boss=g.spawnEnemy('sentinel',{x:p.x+55,y:p.y});
+  boss.speed=0;boss.contactCooldown=0;g.enemies=[boss];
+  g.step(1/60,{fire:false});
+  assert.equal(p.hp,120);
+  assert.equal(boss.attackLeft,ENEMIES.sentinel.attackWindup);
+  assert.equal(boss.attackX,p.x);
+  assert.equal(boss.attackY,p.y);
+  runFrames(g,45,{fire:false});
+  assert.equal(p.hp,120);
+  runFrames(g,25,{fire:false});
+  assert.equal(p.hp,120-ENEMIES.sentinel.damage);
+  assert.ok(g.events.some(ev=>ev.type==='boss-strike' && ev.hit));
+  assert.ok(g.effects.some(f=>f.type==='boss-strike'));
+});
+
+test('moving diagonally out of both Sentinel lanes avoids the hit',()=>{
+  const g=new Game({seed:19}),p=g.player;
+  const boss=g.spawnEnemy('sentinel',{x:p.x+55,y:p.y});
+  boss.speed=0;boss.contactCooldown=0;g.enemies=[boss];
+  g.step(1/60,{fire:false});
+  p.x+=24;p.y+=24;
+  runFrames(g,75,{fire:false});
+  assert.equal(p.hp,120);
+  assert.ok(g.events.some(ev=>ev.type==='boss-strike' && ev.hit===false));
+  assert.ok(g.events.some(ev=>ev.type==='evade'));
+});
+
+test('moving only along a Sentinel lane is not a safe dodge',()=>{
+  const g=new Game({seed:20}),p=g.player;
+  const boss=g.spawnEnemy('sentinel',{x:p.x+55,y:p.y});
+  boss.speed=0;boss.contactCooldown=0;g.enemies=[boss];
+  g.step(1/60,{fire:false});
+  p.x+=33; // outside the center box, but still on the horizontal lane
+  runFrames(g,75,{fire:false});
+  assert.equal(p.hp,120-ENEMIES.sentinel.damage);
+});
+
+test('a live boss blocks mutation selection; killing it clears wave 4',()=>{
+  const g=new Game({seed:5});advanceToWave(g,4);
+  const boss=g.enemies.find(e=>e.kind==='sentinel');
+  for(const e of g.enemies){if(e!==boss)e.alive=false;}
+  g.step(1/60,{fire:false});
+  assert.equal(g.state,'playing');assert.equal(g.enemies.length,1);
+  g.hitEnemy(boss,1e5,{x:boss.x,y:boss.y},'pulse');
+  assert.ok(g.events.some(ev=>ev.type==='boss-defeated' && ev.wave===4));
+  g.step(1/60,{fire:false});
+  assert.equal(g.state,'upgrade');
+  assert.equal(g.upgradeChoices.length,3);
+});

@@ -52,6 +52,11 @@ export class Game {
       this.spawnEnemy(kind);
     }
     this.event('wave',{wave:this.wave});
+    // One visible elite every fourth wave: it must die before mutation selection.
+    if(this.wave%4===0){
+      const boss=this.spawnEnemy('sentinel');
+      this.event('boss-appeared',{wave:this.wave,bossId:boss.id});
+    }
     this.fx('announcement',this.width/2,this.height*0.3,{label:`WAVE ${String(this.wave).padStart(2,'0')}`,life:1.3});
   }
   spawnEnemy(kind='swarm', point=null){
@@ -155,8 +160,19 @@ export class Game {
       if(e.attackLeft>0){
         if(e.stun<=0)e.attackLeft=Math.max(0,e.attackLeft-dt);
         if(e.attackLeft===0){
-          const inStrike=sq(p.x-e.attackX)+sq(p.y-e.attackY)<=sq(e.attackRadius);
+          // The Sentinel warns with two finite orthogonal lanes, not a circle.
+          // Dodging straight along one lane is unsafe; escape diagonally.
+          const def=ENEMIES[e.kind];
+          const deltaX=Math.abs(p.x-e.attackX),deltaY=Math.abs(p.y-e.attackY);
+          const inStrike=def.pattern==='cross'
+            ? (deltaX<=def.crossHalfLength && deltaY<=def.crossHalfWidth) ||
+              (deltaY<=def.crossHalfLength && deltaX<=def.crossHalfWidth)
+            : sq(p.x-e.attackX)+sq(p.y-e.attackY)<=sq(e.attackRadius);
           const damaged=inStrike && this.hitPlayer(e.damage,{x:e.x,y:e.y});
+          if(def.pattern==='cross'){
+            this.fx('boss-strike',e.attackX,e.attackY,{life:0.26,halfLength:def.crossHalfLength,halfWidth:def.crossHalfWidth});
+            this.event('boss-strike',{hit:Boolean(damaged)});
+          }
           if(!damaged){
             this.fx('evade',e.attackX,e.attackY,{life:0.35});
             this.event('evade',{kind:e.kind});
@@ -258,7 +274,8 @@ export class Game {
       this.comboTimer=3.2;
       this.score+=ENEMIES[enemy.kind].score * (1+Math.floor(Math.min(this.combo,12)/4));
       this.fx('death',enemy.x,enemy.y,{radius:enemy.radius+7,color:ENEMIES[enemy.kind].fill,life:0.36});
-      this.spawnParticles(enemy.x,enemy.y,ENEMIES[enemy.kind].fill,enemy.kind==='brute'?22:12,65);
+      this.spawnParticles(enemy.x,enemy.y,ENEMIES[enemy.kind].fill,enemy.kind==='sentinel'?38:enemy.kind==='brute'?22:12,65);
+      if(enemy.kind==='sentinel')this.event('boss-defeated',{wave:this.wave});
       this.event('kill',{kind:enemy.kind,combo:this.combo});
     }
   }
