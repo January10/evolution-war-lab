@@ -1,6 +1,6 @@
 # Pixel Frontline — goal, milestones and verified state
 
-Last reviewed: 2026-10-15, V1.2.1. This is the canonical product goal and acceptance ledger; evidence and status must be updated in each iteration.
+Last reviewed: 2026-10-15, V1.2.2. This is the canonical product goal and acceptance ledger; evidence and status must be updated in each iteration.
 
 ## North-star product goal
 
@@ -14,10 +14,10 @@ Create a shareable, replayable pixel-arena survival game where a new player can 
 | Basic movement/dash/weapon controls graspable in 30 sec | Partial | V1.2.1 `CombatGuide` presents contextual, nonblocking hints and advances on real action events; 4 deterministic tests + Chromium keyboard smoke passed. Needs at least one unfamiliar human test. |
 | 3 distinct weapons, defensive dodge, death/retry, wave/upgrade loop | Partial | 29 passing unit tests plus Chromium weapon/pause/retry smoke. Manual full-loop end-to-end browser test not done. |
 | Wave 4 Sentinel reached and can be defeated normally | Partial | `npm run soak` three 600-s simulated controller runs each reached and killed a boss without manually mutating wave/enemy state; real browser natural-wave progression not yet verified end-to-end. |
-| 10 minutes continuous browser session without uncaught errors/hangs, retry works | **NOT VERIFIED** | Only a 600-second **headless core simulation** (`scripts/soak.mjs`, 3 seeded legal-input runs) and short browser UI smoke (0 page exceptions). Do not conflate these with 10-minute browser play. |
+| 10 minutes continuous browser session without uncaught errors/hangs, retry works | **NOT VERIFIED** | V1.2.2: optional `python scripts/browser_soak.py` exercised real bundled offline HTML in Chromium for 600 **accelerated game seconds** with natural combat/upgrade/Boss flow (seed 7 reached wave 25, 6 Boss defeats, 24 mutations, and succeeded restart; 0 uncaught JS errors). This is reproducible browser *simulation*, NOT 600 seconds real-time or human novice testing; verify full normal-speed device play. |
 | `npm test`, `npm run build` successful | **PASS** | V1.2.1 local: **29 / 29 tests**, build created `dist/index.html` + `dist/play.html`; `npm run soak` passed 3 seeded sessions. |
 
-**Highest-priority M1 finding:** scripted controller clears the first wave in **3.72–4.65 seconds** across seeds 7/13/33; that leaves too little time for players to learn movement before a mutation dialog interrupts combat. The same scripted controller can reach waves 24–28 in ten game minutes with repeated HP upgrades; difficulty pacing likely needs a real playtest and adjustment. Next iteration: address early-wave pacing in a way that preserves active combat (no mandatory idle countdown), then add browser-level uninterrupted full-loop regression.
+**Early-wave M1 fix (V1.2.2):** replaced the 3.72–4.65s scripted clear with kill-triggered reinforcement squads, retaining the initial six and limiting simultaneous threats to eight. Three seeded scripted runs now clear at **12.60 / 12.53 / 14.65s**; no forced idle time. These are not novice tests and do not establish pleasant difficulty. Next: test the uninterrupted full combat/mutation/Boss/retry loop at browser level and evaluate newbie survival/pacing; no invented user feedback.
 
 ## M2 — meaningful evolution builds — NOT STARTED / not accepted
 

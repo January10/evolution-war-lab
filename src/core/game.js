@@ -5,6 +5,12 @@ const PI2 = Math.PI * 2;
 const sq = x => x*x;
 const entityDistance = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
 
+// Onboarding wave: reinforcements arrive from actual kills, never from an idle timer.
+// Keep only a few hostiles active at once so the opening teaches dodge + aim.
+const FIRST_WAVE_REINFORCEMENT_SIZE = 6;
+const FIRST_WAVE_REINFORCEMENT_GROUPS = 3;
+const FIRST_WAVE_FIRST_TRIGGER = 4;
+
 export class Game {
   constructor({seed=2026, width=WIDTH, height=HEIGHT}={}) {
     this.seed=seed;
@@ -26,6 +32,9 @@ export class Game {
     this.events=[];
     this.weaponCooldown=0;
     this.combatTimer=0;
+    this.waveKills=0;
+    this.reinforcementGroupsLeft=0;
+    this.reinforcementNextAt=Infinity;
     this.combo=0;
     this.comboTimer=0;
     this.upgradeChoices=[];
@@ -44,6 +53,9 @@ export class Game {
     this.wave++;
     this.state='playing';
     this.combatTimer=0;
+    this.waveKills=0;
+    this.reinforcementGroupsLeft=this.wave===1?FIRST_WAVE_REINFORCEMENT_GROUPS:0;
+    this.reinforcementNextAt=this.wave===1?FIRST_WAVE_FIRST_TRIGGER:Infinity;
     const count=Math.min(23, 4+this.wave*2);
     for(let i=0;i<count;i++) {
       let kind='swarm';
@@ -196,6 +208,15 @@ export class Game {
     }
     this.updateShots(dt);
     this.enemies=this.enemies.filter(e=>e.alive);
+    // Replenish while the current engagement is still alive. No countdown,
+    // no empty pause between phaselets, and no extra spawns in later waves.
+    if(this.reinforcementGroupsLeft>0 && this.waveKills>=this.reinforcementNextAt){
+      for(let i=0;i<FIRST_WAVE_REINFORCEMENT_SIZE;i++)this.spawnEnemy('swarm');
+      this.reinforcementGroupsLeft--;
+      this.reinforcementNextAt+=FIRST_WAVE_REINFORCEMENT_SIZE;
+      this.event('reinforcements',{wave:this.wave,count:FIRST_WAVE_REINFORCEMENT_SIZE,groupsLeft:this.reinforcementGroupsLeft});
+      this.fx('announcement',this.width/2,this.height*0.3,{label:'INCOMING',life:0.75});
+    }
     this.effects=this.effects.filter(f=>(f.life-=dt)>0);
     this.updateParticles(dt);
     if(this.player.hp<=0){this.state='dead';this.event('dead',{score:this.score,wave:this.wave});this.fx('pulse',p.x,p.y,{radius:48,color:'#ff6f85',life:0.7});return;}
@@ -270,6 +291,7 @@ export class Game {
     if(enemy.hp<=0){
       enemy.alive=false;
       this.kills++;
+      this.waveKills++;
       this.combo=this.comboTimer>0?this.combo+1:1;
       this.comboTimer=3.2;
       this.score+=ENEMIES[enemy.kind].score * (1+Math.floor(Math.min(this.combo,12)/4));

@@ -1,4 +1,4 @@
-# Evolution War Lab — Pixel Frontline (Rebuild V1.2.1)
+# Evolution War Lab — Pixel Frontline (Rebuild V1.2.2)
 
 A playable, **freshly rebuilt** arena survival game using HTML Canvas and vanilla JavaScript. No runtime dependencies, no game asset downloads. Inspired by the separate Evolution War Lab V0.x simulation prototypes, but this codebase is rebuilt around player agency and arcade feedback, not the old 3D simulation dashboard.
 
@@ -86,3 +86,11 @@ The tutorial is an in-game usability aid, **not** proof that an unfamiliar playe
 ## Goal-driven M1 checks
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the four milestone definitions, **actual** acceptance evidence and remaining blockers. The runnable deterministic stress probe is `npm run soak`: three seeded scripted-controller 600-**game-second** sessions using ordinary game input, upgrades and boss encounters. It does **not** represent 10 minutes of human play or browser execution. At V1.2.1 it revealed first-wave completion in about 3.7–4.7 seconds; pacing is the next priority.
+
+## V1.2.2 — Opening combat pacing (2026-10-15)
+
+The first wave now starts with the same **six active swarm enemies** and adds **three kill-triggered reinforcement groups of six** when the current wave has accumulated 4, 10 and 16 kills. New enemies spawn immediately while two earlier foes are still active: **no mandatory countdown or combat-free waiting**. This caps simultaneous opening hostiles at eight (absent test harness intervention) while extending the actual learning encounter, and the HUD announces each reinforcement. The second and later waves, mutation choices, and wave-4 Sentinel pattern are unchanged.
+
+Automated scripted movement/fire controller across seeds 7/13/33 reported first-wave clears at 12.60 / 12.53 / 14.65 seconds. These are core-simulation results, **not proof that a novice will survive, enjoy or learn** in that time. Observe unfamiliar users before calling M1 accepted.
+
+**Optional Chromium integration (Python Playwright required):** after `npm run build`, install `pip install playwright` and `python -m playwright install chromium` if Chromium is not already present, then run `python scripts/browser_soak.py`. It renders the actual offline `dist/play.html` in Chromium, tests keyboard switching/pause, executes **accelerated** 600 game seconds of legal simulated inputs and natural combat/upgrades/Bosses, checks restart and uncaught JS errors, and saves screenshots under ignored `qa-output/`. This is browser integration using simulated game time, **not 10 minutes of human play at normal wall-clock speed**.

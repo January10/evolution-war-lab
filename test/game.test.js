@@ -275,3 +275,41 @@ test('a live boss blocks mutation selection; killing it clears wave 4',()=>{
   assert.equal(g.state,'upgrade');
   assert.equal(g.upgradeChoices.length,3);
 });
+
+
+test('opening reinforcements are kill-triggered, limited in size and never add a waiting gap',()=>{
+  const g=new Game({seed:17});
+  assert.equal(g.enemies.length,6);
+  assert.equal(g.reinforcementGroupsLeft,3);
+  runFrames(g,120,{fire:false});
+  assert.equal(g.reinforcementGroupsLeft,3,'waiting alone cannot spawn reinforcements');
+  assert.equal(g.waveKills,0);
+  for(const [target,groupsLeft] of [[4,2],[10,1],[16,0]]){
+    while(g.waveKills<target){
+      const enemy=g.enemies.find(e=>e.alive);
+      g.hitEnemy(enemy,enemy.hp+1,{x:enemy.x,y:enemy.y},'pulse');
+    }
+    g.step(1/60,{fire:false});
+    assert.equal(g.state,'playing','combat never pauses for a delayed wave');
+    assert.equal(g.reinforcementGroupsLeft,groupsLeft);
+    assert.equal(g.enemies.length,8,'2 survivors and 6 reinforcement swarms at once');
+    assert.equal(g.events.filter(e=>e.type==='reinforcements').length,3-groupsLeft);
+  }
+  for(const enemy of g.enemies)g.hitEnemy(enemy,enemy.hp+1,{x:enemy.x,y:enemy.y},'pulse');
+  g.step(1/60,{fire:false});
+  assert.equal(g.state,'upgrade');
+  assert.equal(g.waveKills,24);
+  assert.equal(g.upgradeChoices.length,3);
+});
+
+test('wave two is unchanged: no reinforcement groups after choosing an upgrade',()=>{
+  const g=new Game({seed:33});
+  g.enemies=[];g.step(1/60,{fire:false});
+  assert.equal(g.state,'upgrade');
+  assert.ok(g.chooseUpgrade(g.upgradeChoices[0]));
+  assert.equal(g.wave,2);
+  assert.equal(g.enemies.length,8);
+  assert.equal(g.waveKills,0);
+  assert.equal(g.reinforcementGroupsLeft,0);
+  assert.equal(g.reinforcementNextAt,Infinity);
+});

@@ -26,6 +26,7 @@ function simulate(seed){
     if(game.wave!==previousWave){waveChanges++;previousWave=game.wave;}
   }
   assert.ok(bossArrivals>0&&bossKills>0,'must reach and defeat a real Sentinel in the continuous loop');
+  assert.ok(firstWaveClear>=12,`seed ${seed} opening lasted only ${firstWaveClear.toFixed(2)}s, expected >=12s`);
   assert.ok(game.wave>=5&&upgrades>=4,'must repeat the combat/mutation loop through boss');
   const result={seed,simulatedSeconds:Math.floor(game.time),wave:game.wave,kills:game.kills,mutations:game.mutations.length,bossArrivals,bossKills,playerHp:Math.round(game.player.hp),firstWaveClearSeconds:+firstWaveClear.toFixed(2),scriptedController:true};
   return result;

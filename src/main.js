@@ -10,7 +10,7 @@ root.innerHTML=`
   <header class="masthead">
     <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div class="brand-copy"><div class="kicker">EXPERIMENTAL COMBAT / 001</div><h1>EVOLUTION <span>WAR LAB</span></h1><p>PIXEL FRONTLINE <b>·</b> GENOME SURVIVAL</p></div>
-    <div class="header-actions"><span class="version">REBUILD V1.2.1</span><button id="mute" class="outline-btn" type="button">♪ SOUND OFF</button><button id="restart" class="outline-btn bright" type="button">↻ NEW RUN</button></div>
+    <div class="header-actions"><span class="version">REBUILD V1.2.2</span><button id="mute" class="outline-btn" type="button">♪ SOUND OFF</button><button id="restart" class="outline-btn bright" type="button">↻ NEW RUN</button></div>
   </header>
   <section class="mission-banner"><span class="pulse-light"></span><span id="phase">LIVE EXPERIMENT</span><span class="banner-sep">//</span><span id="objectives">CLEAR THE HOSTILES TO EVOLVE</span><span class="banner-end">SECTOR 07 / DEEP CHAMBER</span></section>
   <main class="layout">
@@ -83,7 +83,7 @@ function updateHUD(){
   q('dashFill').style.width=`${100*(1-p.dashReady/s.dashCooldown)}%`;q('dashLabel').textContent=p.dashReady<=0?'READY · SHIFT':`${p.dashReady.toFixed(1)}s RECHARGING`;
   q('phase').textContent=data.state==='playing'?(data.paused?'CHAMBER PAUSED':'LIVE EXPERIMENT'):data.state==='upgrade'?'GENOME MODIFICATION':'EXPERIMENT TERMINATED';
   const boss=game.enemies.some(e=>e.alive && e.kind==='sentinel');
-  q('objectives').textContent=data.state==='playing'?(boss?'ELIMINATE SENTINEL // AVOID THE CROSS STRIKE':'CLEAR THE HOSTILES TO EVOLVE'):data.state==='upgrade'?'CHOOSE A MUTATION TO PROCEED':'RESTART TO TRY A NEW BUILD';
+  q('objectives').textContent=data.state==='playing'?(boss?'ELIMINATE SENTINEL // AVOID THE CROSS STRIKE':game.reinforcementGroupsLeft>0?'SURVIVE THE OPENING // MORE HOSTILES INBOUND':'CLEAR THE HOSTILES TO EVOLVE'):data.state==='upgrade'?'CHOOSE A MUTATION TO PROCEED':'RESTART TO TRY A NEW BUILD';
   q('waveHint').textContent=data.state==='playing'?'SURVIVE. ADAPT. REPEAT.':data.state==='upgrade'?'GENOME ADAPTATION IN PROGRESS':'NO SIGNAL';
   q('comboChip').classList.toggle('hidden',data.combo<2);q('comboChip').textContent=`COMBO ×${data.combo}`;
   q('statRate').textContent=s.attackRate.toFixed(2)+'×';q('statPower').textContent=s.damage.toFixed(2)+'×';q('statSpeed').textContent=s.speed.toFixed(2)+'×';q('statGene').textContent=`GEN ${String(data.wave).padStart(2,'0')}`;
@@ -109,6 +109,7 @@ function processEvents(){
   for(const e of events){
     sound.onEvent(e);
     if(e.type==='wave')lastEvent=`第 ${e.wave} 波敌人已接近`;
+    if(e.type==='reinforcements')lastEvent=`INCOMING: +${e.count} 敌军增援 · 继续移动并躲避`;
     if(e.type==='wave-clear')lastEvent=`第 ${e.wave} 波清除成功，选择变异`;
     if(e.type==='boss-appeared')lastEvent='警报：哨兵机甲入侵！朝斜向冲刺，逃离十字火线';
     if(e.type==='boss-defeated')lastEvent='SENTINEL DOWN — 哨兵机甲已摧毁';
