@@ -129,7 +129,7 @@ function frame(now){
   acc+=delta;
   const moveX=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));
   const moveY=Number(keys.has('KeyS')||keys.has('ArrowDown'))-Number(keys.has('KeyW')||keys.has('ArrowUp'));
-  guide.observe({moveX,moveY,playing:game.state==='playing',time:game.time});
+  guide.observe({moveX,moveY,playing:game.state==='playing' && !game.paused,time:game.time});
   let loops=0;
   while(acc>=1/60&&loops++<6){
     game.step(1/60,{
