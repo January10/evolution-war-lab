@@ -1,0 +1,50 @@
+name: Test, build and browser playtest
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: npm test
+      - run: npm run build
+      - run: npm run soak
+      - run: npm run difficulty
+      - name: Install Chromium for real HTML playtest
+        run: |
+          python -m pip install 'playwright==1.55.0'
+          python -m playwright install --with-deps chromium
+      - name: Actual wall-clock game input, replay mutation, and accelerated long-loop tests
+        run: |
+          python scripts/autodev_playtest.py
+          python scripts/restart_mutation_playtest.py
+          python scripts/browser_soak.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-playtest-evidence
+          path: qa-output/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Package exact tested project for Library sync
+        run: |
+          zip -q -r evolution-war-lab-rebuild-active.zip \
+            .automation .github docs scripts src test index.html package.json README.md ITERATION_LOG.md dist
+          sha256sum evolution-war-lab-rebuild-active.zip
+      - name: Upload verified source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: tested-source-zip
+          path: evolution-war-lab-rebuild-active.zip
+          if-no-files-found: error
+          retention-days: 7
