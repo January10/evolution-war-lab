@@ -35,3 +35,16 @@ jobs:
           path: qa-output/
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Package exact tested project for Library sync
+        run: |
+          zip -q -r evolution-war-lab-rebuild-active.zip \
+            .automation .github docs scripts src test index.html package.json README.md ITERATION_LOG.md dist
+          sha256sum evolution-war-lab-rebuild-active.zip
+      - name: Upload verified source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: tested-source-zip
+          path: evolution-war-lab-rebuild-active.zip
+          if-no-files-found: error
+          retention-days: 7
