@@ -216,10 +216,21 @@ export class Game {
         e.x=clamp(e.x+(ax/dist+sway*-ay/dist)*e.speed*dt,e.radius+3,this.width-e.radius-3);
         e.y=clamp(e.y+(ay/dist+sway*ax/dist)*e.speed*dt,e.radius+3,this.height-e.radius-3);
       }
-      if(e.stun<=0 && e.contactCooldown<=0 && entityDistance(e,p)<=e.radius+p.radius+attack.attackReach){
-        e.attackLeft=attack.attackWindup;e.attackTotal=attack.attackWindup;
-        e.attackX=p.x;e.attackY=p.y;e.attackRadius=attack.attackRadius;
-        this.event('telegraph',{kind:e.kind});
+      if(e.stun<=0 && e.contactCooldown<=0){
+        const closeEnough=entityDistance(e,p)<=e.radius+p.radius+attack.attackReach;
+        // Hunters project the current velocity once, then lock a visible target.
+        // Reversing direction or timing a dash after warning can still avoid it.
+        const predictive=e.kind==='hunter' && !closeEnough && dist<=attack.leadRange;
+        if(closeEnough || predictive){
+          const windup=predictive?attack.leadWindup:attack.attackWindup;
+          e.attackLeft=windup;e.attackTotal=windup;
+          const velocity=length(p.vx,p.vy);
+          const lead=predictive && velocity>0?Math.min(attack.leadMaxDistance,velocity*attack.leadTime)/velocity:0;
+          e.attackX=clamp(p.x+p.vx*lead,p.radius+8,this.width-p.radius-8);
+          e.attackY=clamp(p.y+p.vy*lead,p.radius+8,this.height-p.radius-8);
+          e.attackRadius=attack.attackRadius;
+          this.event('telegraph',{kind:e.kind,predictive});
+        }
       }
     }
     this.updateShots(dt);

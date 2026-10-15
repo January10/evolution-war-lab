@@ -111,3 +111,13 @@ Repository target and GitHub App installation are not configured as of initial r
 **Open issues:** Newbie comprehension not tested with an unfamiliar person, native offline opening untested, real-time 10-minute browser play still needed, and circle-kiting needs threat with fair warning. M1 remains PARTIAL, M2–M4 unaccepted.
 
 **Next single smallest goal:** Test and implement one *fair* anti-circle-kiting behavior for an existing hunter (e.g. position prediction with visible telegraph); aim to increase real hits on legal-input orbit policies while retaining dodge reaction time and novice protection. No new enemy types or Bosses. Measure the same three no-heal seed outcomes before/after, keep 600-second sustain controller and browser smoke green.
+
+## V1.2.4 — Hunter anticipatory strike with dodgeable warning (2026-10-15, hourly iteration 5)
+
+**M1 single objective:** previously no-heal orbit+dash controllers could survive without taking hits, making movement an exploit rather than a risk/reward decision. Add fair pressure to the **existing Hunter**, no new enemy type/Boss/weapon.
+
+**Source changes:** `src/core/data.js` adds Hunter warning lead bounds (75px trigger, 0.50s charge, 36px max predicted movement) and 1.25s recovery; `src/core/game.js` forecasts *current* player velocity once when the Hunter commits, clamps target to arena, and locks the strike location throughout the visible square countdown. Late sidesteps/reversals or dash avoid the attack. Existing melee warning stays 0.37s. Six deterministic test cases in `test/hunter_lead.test.js`, version+README+roadmap updates.
+
+**Pre-commit verification (limited):** JavaScript VM executed actual in-memory patched module functions: stationary/straight move and late turn scenarios passed; no-heal orbit+dash seeds 7/13/33 at 180 game seconds changed from **0/0/0 hits baseline to 11/5/2 hits**. Three healing-controller 600-game-second VM runs also survived naturally, reached waves 38/27/36 and killed Sentinel 9/6/8 times, first wave durations 12.60/12.53/14.65. **NOT npm / browser / human testing.** The attached container execution backend returned `InvalidArgumentError` even for `pwd` and `echo`; do not claim local npm was run. Repository GitHub Actions runs `npm test`, `npm run build`, `npm run soak`, `npm run difficulty`; judge published code by actual CI results.
+
+**Next goal:** verify short-range Hunter warning readability in real-browser play, then run continuous *wall-clock* 10 minute session; tune only if actual observations warrant it. M1 remains PARTIAL.

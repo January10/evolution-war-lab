@@ -24,7 +24,7 @@ export const UPGRADES = Object.freeze([
 ]);
 export const ENEMIES = Object.freeze({
   swarm: {hp:32, speed:29, radius:5, damage:6, score:10, fill:'#f46f85', attackWindup:0.46, attackRadius:11, attackReach:3, attackCooldown:0.93},
-  hunter: {hp:52, speed:40, radius:6, damage:10, score:18, fill:'#ff9a6e', attackWindup:0.37, attackRadius:13, attackReach:5, attackCooldown:0.88},
+  hunter: {hp:52, speed:40, radius:6, damage:10, score:18, fill:'#ff9a6e', attackWindup:0.37, attackRadius:13, attackReach:5, attackCooldown:1.25, leadRange:75, leadWindup:0.50, leadTime:0.46, leadMaxDistance:36},
   brute: {hp:144, speed:19, radius:10, damage:16, score:35, fill:'#b36ef2', attackWindup:0.80, attackRadius:21, attackReach:9, attackCooldown:1.40},
   sentinel: {hp:440, speed:20, radius:16, damage:23, score:300, fill:'#f7be5c', attackWindup:1.10, attackRadius:15, attackReach:65, attackCooldown:2.35, pattern:'cross', crossHalfLength:64, crossHalfWidth:9},
 });

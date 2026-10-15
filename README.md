@@ -1,4 +1,4 @@
-# Evolution War Lab — Pixel Frontline (Rebuild V1.2.3)
+# Evolution War Lab — Pixel Frontline (Rebuild V1.2.4)
 
 A playable, **freshly rebuilt** arena survival game using HTML Canvas and vanilla JavaScript. No runtime dependencies, no game asset downloads. Inspired by the separate Evolution War Lab V0.x simulation prototypes, but this codebase is rebuilt around player agency and arcade feedback, not the old 3D simulation dashboard.
 
@@ -103,3 +103,9 @@ Observed before this change: the seeded *stationary* controller could clear **67
 All repeatable stat upgrades now use **monotone diminishing returns** after preserving the first-pick gains. Damage approaches 5x, rate 3.5x, speed 2.3x, passive regen 5HP/s and max hull 300HP asymptotically, with less healing from late hull picks. The multishot mutation is capped at three additional projectiles and disappears from random offerings after the third pick; at least five other options remain. The HUD reports the actual derived multipliers. These soft limits are a single balancing change to avoid runaway damage/healing, **not** the finished three-path mutation system.
 
 `npm run difficulty` runs repeatable no-hull/no-regen scripted controllers and emits per-seed results (including death time, wave, hits and mutations). Scripted stationary vs orbiting inputs are **diagnostics, not novice behavior**. Future iterations must use these results to assess whether constant movement makes combat too safe, rather than declaring M1 fun/complete. The previously implemented core 600-game-second sustain-controller check remains available with `npm run soak`.
+
+## V1.2.4 — Visible Hunter interception (2026-10-15)
+
+Hunters now begin a **locked, half-second warning** when they get within 75 pixels, projecting a short maximum 36-pixel lead along the player's current direction. The prediction happens once when the warning starts: turn or dash to dodge the marked square. Existing short-range hunter contact attacks still have their original windup, and the early swarm wave is unchanged. This addresses orbiting always being safe without adding enemy types or hidden instant damage.
+
+The new `test/hunter_lead.test.js` covers moving into the forecast, changing direction to evade, range limits, boundary clamping, and existing dash/contact behavior. Initial in-memory JavaScript diagnostic of the exact patched engine, **not npm or human play**, recorded in 180 game seconds, seeds 7/13/33, no-healing orbit+dash: **0/0/0 hits before** and **11/5/2 hits after**. Three 600-game-second scripted *healing* controllers on the patched engine survived, reached waves 38/27/36 and defeated 9/6/8 actual Sentinel bosses. Difficulty and newbie readability still require real player testing. GitHub CI runs the actual npm commands; see its live status rather than assuming success.

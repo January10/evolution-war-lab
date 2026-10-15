@@ -1,6 +1,6 @@
 # Pixel Frontline — goal, milestones and verified state
 
-Last reviewed: 2026-10-15, V1.2.3. This is the canonical product goal and acceptance ledger; evidence and status must be updated in each iteration.
+Last reviewed: 2026-10-15, V1.2.4. This is the canonical product goal and acceptance ledger; evidence and status must be updated in each iteration.
 
 ## North-star product goal
 
@@ -40,3 +40,9 @@ Create a shareable, replayable pixel-arena survival game where a new player can 
 ## Iteration order and guardrails
 
 Fix stability and blocking usability issues → verify full combat loop → create distinctive evolution choices → polish replayability/difficulty → prepare a public candidate. If a gate is unverified, do not silently advance. Each hourly cycle updates this ledger with actual evidence or explicitly records the blocker. Never report estimates as user research.
+
+### V1.2.4 M1 progress — targeted Hunter telegraphs, not M1 acceptance
+
+The deterministic no-healing orbit+dash diagnostic at seeds 7/13/33, 180 simulated seconds, observed **0/0/0 hits before → 11/5/2 hits after** in an in-memory execution of the exact patched JS engine (not npm, not human research). Existing Hunter contact attacks remain, but hunters can now warn for 0.50s about a capped (36px) projected intercept at up to 75px, then strike only the preannounced location. Reversal, sidestep or dash remains counterplay; six new focused regression tests document it. Three 600-game-second healing-controller simulations on the patched engine finished and defeated real Sentinel bosses, but those are still simulated game time.
+
+**Unresolved M1 gates:** verify actual `npm test`/`npm run build` on CI and restore working local runner, native file-open and ordinary real-time 10-minute browser test, first-time human instruction comprehension, and tuning predicted warning visibility. Do not mark M1 PASS from scripted diagnostics alone. The first logged design pass avoids making enemies instantly or silently damage the player.
