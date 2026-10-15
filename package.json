@@ -1,6 +1,6 @@
 {
   "name": "evolution-war-lab",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "private": true,
   "type": "module",
   "description": "Pixel arena survival with evolving combat upgrades and distinctive weapons",

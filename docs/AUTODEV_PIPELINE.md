@@ -16,3 +16,7 @@ The 30-minute GitHub Actions scheduler is on main because scheduled workflows on
 Open GitHub Actions and run "Pixel Frontline - autonomous development every 30 minutes" manually. Check develop, validate, and publish jobs; Actions artifacts store test screenshots. If Copilot CLI authentication is unavailable, add OPENAI_API_KEY as a repository Actions secret, or enable Copilot CLI access. ChatGPT subscription/IDE login is NOT an API key. Never paste credentials in chat.
 
 Monitor GitHub Actions minutes, Copilot/model usage and any associated charges. The schedule and job creation alone do not mean that successful autonomous code updates are occurring.
+
+## Current status — superseding the historical AI scheduler design (2026-10-16)
+
+The scheduled **AI code-writing** workflow described above is no longer enabled: the `main` workflow `.github/workflows/autodev-30m.yml` was verified as `workflow_dispatch` only, named `Pixel Frontline - manual QA only (ChatGPT owns development)`. It cannot independently edit or push game code. The ChatGPT hourly task now owns actual development, while GitHub push/PR CI and manual Actions may only verify code. `scripts/restart_mutation_playtest.py` was added as a real-browser replay regression in V1.2.6. This section supersedes the obsolete first-run and API-key instructions above.

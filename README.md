@@ -1,4 +1,4 @@
-# Evolution War Lab — Pixel Frontline (Rebuild V1.2.4)
+# Evolution War Lab — Pixel Frontline (Rebuild V1.2.6)
 
 A playable, **freshly rebuilt** arena survival game using HTML Canvas and vanilla JavaScript. No runtime dependencies, no game asset downloads. Inspired by the separate Evolution War Lab V0.x simulation prototypes, but this codebase is rebuilt around player agency and arcade feedback, not the old 3D simulation dashboard.
 
@@ -117,3 +117,9 @@ Live combat now **automatically pauses when the game window loses focus or the t
 The new `scripts/autodev_playtest.py` in CI uses real Chromium keyboard/mouse input for at least 24 wall-clock seconds on the built `dist/play.html`: movement, dash, all three weapons, pause, focus-loss autopause, manual aim, upgrade interactions, restart, live pixels and script errors. `scripts/browser_soak.py` separately covers 600 accelerated *game* seconds. Neither constitutes a 10-minute human playtest.
 
 The 30-minute AI development GitHub Actions workflow is configured on the default branch at `.github/workflows/autodev-30m.yml` and always edits/publishes only the existing `ai/evolution-war-lab-autodev` PR branch after independent tests; an eligible Copilot CLI account or GitHub Actions `OPENAI_API_KEY` secret is still required for successful AI generations. See `docs/AUTODEV_PIPELINE.md`. No automatic main merge.
+
+## V1.2.6 — Restart-safe mutation cards (2026-10-16)
+
+**M1 bug fixed:** restarting after a mutation used to leave `upgradeOverlay.dataset.wave` and the previous run's button DOM cached. The next run reaches wave 1 again with a potentially different mutation deck, but old cards were shown and could silently reject selection. New Run / R now invalidate the cached wave key and clear stale cards. `scripts/restart_mutation_playtest.py` clears the first wave **twice using real keyboard input in Chromium**, selecting a mutation, restarting, confirming the new cards equal the active `Game.upgradeChoices`, and successfully entering wave 2 again. CI runs this regression along with the existing 24s keyboard playtest and accelerated 600-game-second check. The Chromium sandbox blocked direct `file://`; the actual built HTML was tested via `page.set_content`, so a user-machine offline launch remains unverified. Human novice and 10-minute real-time play remain open M1 gates.
+
+**Automation update:** The previous 30-minute GitHub AI code writer was disabled on `main` and is now manual read-only QA only; ChatGPT's hourly automation directly owns development. No third-party AI coding API key is needed for this project workflow. `docs/AUTODEV_PIPELINE.md` retains a historical description with a superseding note.

@@ -1,6 +1,6 @@
 # Pixel Frontline — goal, milestones and verified state
 
-Last reviewed: 2026-10-15, V1.2.4. This is the canonical product goal and acceptance ledger; evidence and status must be updated in each iteration.
+Last reviewed: 2026-10-16, V1.2.6. This is the canonical product goal and acceptance ledger; evidence and status must be updated in each iteration.
 
 ## North-star product goal
 
@@ -55,3 +55,9 @@ The deterministic no-healing orbit+dash diagnostic at seeds 7/13/33, 180 simulat
 - The PR CI now requires `scripts/autodev_playtest.py` (minimum 24s **real-time keyboard/mouse play**) and `scripts/browser_soak.py` (600 **accelerated game seconds**) in addition to Node unit/build/soak/difficulty tests. Screenshot evidence is retained for review.
 - Local isolated-container evidence was recorded on the available V1.2.3 materialized baseline plus this patch: 35/35 Node tests, build, 3 seeded soaks, difficulty script, real Chromium input 26.57 wall seconds (wave 3 / two mutations / no JS errors) and accelerated browser soak all passed. Full V1.2.4-derived integration awaits GitHub CI; do not conflate baselines.
 - **M1 remains PARTIAL / not accepted**: human novice comprehension, real device file opening, 600 seconds of *normal-speed* continuous browser play and satisfactory difficulty have not been proven.
+
+### V1.2.6 M1 progress — restart mutation integrity (2026-10-16)
+
+**Fixed, tested:** The UI cached mutation offers only by `wave` number. After a first-wave upgrade, starting a new run reuses `wave=1`, so the overlay incorrectly preserved an old card deck that could fail when clicked. Real Chromium keyboard-driven two-run play reproduced the mismatch before code change; `newRun()` now clears the per-wave DOM cache and refreshes the second run's actual choices. The new browser regression executes two **natural** first-wave clears and selections and is required in GitHub CI, in addition to 24s wall-clock input smoke and 600 accelerated *game*-second integration.
+
+**Still PARTIAL:** A 24s real-time browser input test and accelerated long session are engineering validation, not a 10-minute wall-clock play session, a novice comprehension study, a manual Windows file-open test or proof of replayability. Do not mark M1 complete until these independent gates have evidence.

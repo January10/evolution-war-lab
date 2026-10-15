@@ -10,7 +10,7 @@ root.innerHTML=`
   <header class="masthead">
     <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div class="brand-copy"><div class="kicker">EXPERIMENTAL COMBAT / 001</div><h1>EVOLUTION <span>WAR LAB</span></h1><p>PIXEL FRONTLINE <b>·</b> GENOME SURVIVAL</p></div>
-    <div class="header-actions"><span class="version">REBUILD V1.2.5</span><button id="mute" class="outline-btn" type="button">♪ SOUND OFF</button><button id="restart" class="outline-btn bright" type="button">↻ NEW RUN</button></div>
+    <div class="header-actions"><span class="version">REBUILD V1.2.6</span><button id="mute" class="outline-btn" type="button">♪ SOUND OFF</button><button id="restart" class="outline-btn bright" type="button">↻ NEW RUN</button></div>
   </header>
   <section class="mission-banner"><span class="pulse-light"></span><span id="phase">LIVE EXPERIMENT</span><span class="banner-sep">//</span><span id="objectives">CLEAR THE HOSTILES TO EVOLVE</span><span class="banner-end">SECTOR 07 / DEEP CHAMBER</span></section>
   <main class="layout">
@@ -52,7 +52,15 @@ for(const btn of q('weapons').querySelectorAll('button'))btn.addEventListener('c
 const keys=new Set();let pointer=null,manual=false,lastEvent='',lastFrame=performance.now(),acc=0,frames=0,highScore=0;
 try{highScore=Number(localStorage.getItem('ewl_highscore')||0)||0;}catch{}
 
-function newRun(){game=new Game({seed:Math.floor(Math.random()*0xFFFFFFFF)});guide=new CombatGuide();pointer=null;manual=false;keys.clear();lastEvent='已开始新一轮生存实验';updateHUD();}
+function newRun(){
+  game=new Game({seed:Math.floor(Math.random()*0xFFFFFFFF)});
+  guide=new CombatGuide();pointer=null;manual=false;keys.clear();
+  // Wave numbers repeat across runs: clear the cached mutation cards and wave key.
+  // Otherwise the next run's first mutation may display the previous run's offers.
+  q('upgradeOverlay').removeAttribute('data-wave');
+  q('upgrades').replaceChildren();
+  lastEvent='已开始新一轮生存实验';updateHUD();
+}
 q('restart').addEventListener('click',newRun);q('retry').addEventListener('click',newRun);
 q('mute').addEventListener('click',()=>{const on=sound.toggle();q('mute').textContent=on?'♫ SOUND ON':'♪ SOUND OFF';});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
