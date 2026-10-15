@@ -1,4 +1,4 @@
-# Evolution War Lab — Pixel Frontline (Rebuild V1.2.2)
+# Evolution War Lab — Pixel Frontline (Rebuild V1.2.3)
 
 A playable, **freshly rebuilt** arena survival game using HTML Canvas and vanilla JavaScript. No runtime dependencies, no game asset downloads. Inspired by the separate Evolution War Lab V0.x simulation prototypes, but this codebase is rebuilt around player agency and arcade feedback, not the old 3D simulation dashboard.
 
@@ -16,6 +16,7 @@ Open http://127.0.0.1:5173 (or change the `PORT` environment variable).
 npm test
 npm run build
 npm run preview
+npm run difficulty # deterministic stationary vs mobile, no-healing difficulty diagnostic
 ```
 
 `dist/index.html` is the entrypoint for a static website. `dist/play.html` is a **single, fully offline playable HTML file** that opens directly by double-clicking, with zero installation. Deploy `dist/` to any static host, including GitHub Pages (the repository must be connected and Pages must be configured).
@@ -57,7 +58,7 @@ Clear an enemy wave, choose one of three randomized genome mutations, then try t
 8. [ ] Eliminate the Sentinel to unlock the next mutation choice.
 9. [ ] Check console and performance for runtime errors.
 
-The 25 Node tests verify core combat, telegraphed strikes, dodge, Sentinel wave timing and attack geometry, and invulnerability. A Chromium smoke test exercised the bundled game UI, weapon hotkeys, pausing, wave-upgrade overlay, and V1.1 telegraph rendering. Standard navigation to local files/localhost was blocked by the isolated QA environment, so **verify normal launch on your own device** before publishing.
+The Node test suite verifies core combat, telegraphed strikes, dodge, Sentinel wave timing and attack geometry, and invulnerability. A Chromium smoke test exercised the bundled game UI, weapon hotkeys, pausing, wave-upgrade overlay, and V1.1 telegraph rendering. Standard navigation to local files/localhost was blocked by the isolated QA environment, so **verify normal launch on your own device** before publishing.
 
 ## Hourly automation handoff
 
@@ -94,3 +95,11 @@ The first wave now starts with the same **six active swarm enemies** and adds **
 Automated scripted movement/fire controller across seeds 7/13/33 reported first-wave clears at 12.60 / 12.53 / 14.65 seconds. These are core-simulation results, **not proof that a novice will survive, enjoy or learn** in that time. Observe unfamiliar users before calling M1 accepted.
 
 **Optional Chromium integration (Python Playwright required):** after `npm run build`, install `pip install playwright` and `python -m playwright install chromium` if Chromium is not already present, then run `python scripts/browser_soak.py`. It renders the actual offline `dist/play.html` in Chromium, tests keyboard switching/pause, executes **accelerated** 600 game seconds of legal simulated inputs and natural combat/upgrades/Bosses, checks restart and uncaught JS errors, and saves screenshots under ignored `qa-output/`. This is browser integration using simulated game time, **not 10 minutes of human play at normal wall-clock speed**.
+
+## V1.2.3 — Diminishing genome returns and no-healing difficulty probe (2026-10-15)
+
+Observed before this change: the seeded *stationary* controller could clear **675–869 waves in 600 simulated seconds** without any regeneration or hull mutations on four of five samples. Multiplicative +22% damage and +17% rate picks accumulated exponentially, letting the player instantly erase even highly scaled enemies. This undermined the intended 10-minute progression.
+
+All repeatable stat upgrades now use **monotone diminishing returns** after preserving the first-pick gains. Damage approaches 5x, rate 3.5x, speed 2.3x, passive regen 5HP/s and max hull 300HP asymptotically, with less healing from late hull picks. The multishot mutation is capped at three additional projectiles and disappears from random offerings after the third pick; at least five other options remain. The HUD reports the actual derived multipliers. These soft limits are a single balancing change to avoid runaway damage/healing, **not** the finished three-path mutation system.
+
+`npm run difficulty` runs repeatable no-hull/no-regen scripted controllers and emits per-seed results (including death time, wave, hits and mutations). Scripted stationary vs orbiting inputs are **diagnostics, not novice behavior**. Future iterations must use these results to assess whether constant movement makes combat too safe, rather than declaring M1 fun/complete. The previously implemented core 600-game-second sustain-controller check remains available with `npm run soak`.

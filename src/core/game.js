@@ -5,6 +5,13 @@ const PI2 = Math.PI * 2;
 const sq = x => x*x;
 const entityDistance = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
 
+// Repeatable genome choices use diminishing returns so long runs cannot snowball
+// damage / fire rate / healing exponentially past the enemies' linear scaling.
+// The first pick retains its V1.2 power; extra picks stay useful but bounded.
+const saturating = (stacks, maximum, firstGain) =>
+  maximum * (1 - Math.pow(1 - firstGain / maximum, stacks));
+const EXTRA_SHOT_CAP = 3;
+
 // Onboarding wave: reinforcements arrive from actual kills, never from an idle timer.
 // Keep only a few hostiles active at once so the opening teaches dodge + aim.
 const FIRST_WAVE_REINFORCEMENT_SIZE = 6;
@@ -39,6 +46,7 @@ export class Game {
     this.comboTimer=0;
     this.upgradeChoices=[];
     this.mutations=[];
+    this.mutationCounts=Object.fromEntries(UPGRADES.map(u=>[u.id,0]));
     this.stats={damage:1, attackRate:1, speed:1, maxHp:120, regen:0, extraShots:0, dashCooldown:1.65};
     this.player={x:width/2, y:height/2, radius:7, hp:120, vx:0, vy:0, angle:0, iframe:0, dashReady:0, dashLeft:0, facing:0};
     this.spawnWave();
@@ -98,12 +106,20 @@ export class Game {
   upgradeOptions(){return this.upgradeChoices.map(id=>UPGRADES.find(u=>u.id===id));}
   chooseUpgrade(id){
     if(this.state!=='upgrade' || !this.upgradeChoices.includes(id)) return false;
-    if(id==='power') this.stats.damage*=1.22;
-    if(id==='rate') this.stats.attackRate*=1.17;
-    if(id==='hull'){this.stats.maxHp+=30;this.player.hp=Math.min(this.stats.maxHp,this.player.hp+40);}
-    if(id==='mobility'){this.stats.speed*=1.12;this.stats.dashCooldown=Math.max(0.55,this.stats.dashCooldown*0.86);}
-    if(id==='regen') this.stats.regen+=0.8;
-    if(id==='multishot') this.stats.extraShots+=1;
+    if(id==='multishot' && this.stats.extraShots>=EXTRA_SHOT_CAP) return false;
+    const count=++this.mutationCounts[id];
+    if(id==='power') this.stats.damage=1+saturating(count,4,0.22);
+    if(id==='rate') this.stats.attackRate=1+saturating(count,2.5,0.17);
+    if(id==='hull'){
+      this.stats.maxHp=120+saturating(count,180,30);
+      this.player.hp=Math.min(this.stats.maxHp,this.player.hp+Math.max(4,40*Math.pow(.86,count-1)));
+    }
+    if(id==='mobility'){
+      this.stats.speed=1+saturating(count,1.3,0.12);
+      this.stats.dashCooldown=Math.max(0.55,this.stats.dashCooldown*0.86);
+    }
+    if(id==='regen') this.stats.regen=saturating(count,5,0.8);
+    if(id==='multishot') this.stats.extraShots++;
     this.mutations.push(id);
     this.event('upgrade',{upgrade:id});
     this.upgradeChoices=[];
@@ -115,7 +131,7 @@ export class Game {
     this.shots=[];
     this.combo=0;
     this.comboTimer=0;
-    const deck=[...UPGRADES.map(u=>u.id)];
+    const deck=UPGRADES.map(u=>u.id).filter(id=>id!=='multishot' || this.stats.extraShots<EXTRA_SHOT_CAP);
     this.upgradeChoices=[];
     while(this.upgradeChoices.length<3){
       const i=Math.floor(this.rand(0,deck.length));

@@ -1,6 +1,6 @@
 {
   "name": "evolution-war-lab",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "private": true,
   "type": "module",
   "description": "Pixel arena survival with evolving combat upgrades and distinctive weapons",
@@ -9,7 +9,8 @@
     "build": "node scripts/build.mjs",
     "preview": "node scripts/serve.mjs dist",
     "test": "node --test",
-    "soak": "node scripts/soak.mjs"
+    "soak": "node scripts/soak.mjs",
+    "difficulty": "node scripts/difficulty.mjs"
   },
   "engines": {
     "node": ">=18"

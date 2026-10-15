@@ -16,8 +16,8 @@ with sync_playwright() as p:
     page.wait_for_timeout(250)
     initial=page.evaluate('''() => ({version: document.querySelector('.version').textContent, wave: game.wave, opponents: game.enemies.length, guide: document.querySelector('#tutorial').textContent, state: game.state, canvas: !!document.querySelector('#arena').getContext('2d')})''')
     assert initial['wave']==1 and initial['opponents']==6 and initial['canvas']
-    assert initial['version'].endswith('1.2.2')
-    page.screenshot(path=str(out/'v122-onboarding.png'),full_page=True)
+    assert initial['version'].endswith('1.2.3')
+    page.screenshot(path=str(out/'v123-onboarding.png'),full_page=True)
     page.keyboard.down('KeyD');page.wait_for_timeout(300);page.keyboard.up('KeyD')
     guide_after_move=page.locator('#tutorial').inner_text()
     assert 'DASH' in guide_after_move
@@ -56,7 +56,7 @@ with sync_playwright() as p:
     assert result['firstClear']>=12, result
     assert result['wave']>=5 and result['bosses']>=1 and result['upgrades']>=4, result
     assert int(result['uiWave'])==result['wave']
-    page.screenshot(path=str(out/'v122-600s-browser.png'),full_page=True)
+    page.screenshot(path=str(out/'v123-600s-browser.png'),full_page=True)
     page.locator('#restart').click()
     post=page.evaluate('''() => ({wave:game.wave,remaining:game.reinforcementGroupsLeft,guide:document.querySelector('#tutorial').textContent, weapon:game.weapon,state:game.state})''')
     assert post['wave']==1 and post['remaining']==3 and post['weapon']=='pulse' and post['state']=='playing'

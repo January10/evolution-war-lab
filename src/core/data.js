@@ -15,12 +15,12 @@ export const WEAPONS = Object.freeze({
   }
 });
 export const UPGRADES = Object.freeze([
-  {id:'power', name:'高能弹芯', desc:'所有武器伤害 +22%', detail:'+22% DMG'},
-  {id:'rate', name:'神经超频', desc:'所有武器射速 +17%', detail:'+17% FIRE'},
-  {id:'hull', name:'活体装甲', desc:'生命上限 +30，并恢复 40', detail:'+30 MAX HP'},
-  {id:'mobility', name:'推进变异', desc:'移动速度 +12%，冲刺冷却缩短', detail:'+12% SPEED'},
-  {id:'regen', name:'纳米修复', desc:'每秒恢复 0.8 点生命', detail:'+0.8 HP/S'},
-  {id:'multishot', name:'扩散突变', desc:'脉冲增加弹片、霰弹增加弹丸', detail:'+1 PROJECTILE'}
+  {id:'power', name:'高能弹芯', desc:'首层伤害 +22%，重复选择收益递减', detail:'POWER · DIMINISHING'},
+  {id:'rate', name:'神经超频', desc:'首层射速 +17%，重复选择收益递减', detail:'RATE · DIMINISHING'},
+  {id:'hull', name:'活体装甲', desc:'首层生命上限 +30，恢复最多 40；叠加递减', detail:'ARMOR · DIMINISHING'},
+  {id:'mobility', name:'推进变异', desc:'首层速度 +12%，叠加递减；冲刺加快', detail:'SPEED · DIMINISHING'},
+  {id:'regen', name:'纳米修复', desc:'首层每秒回血 0.8，叠加递减', detail:'REGEN · DIMINISHING'},
+  {id:'multishot', name:'扩散突变', desc:'脉冲或霰弹各增加 1 个弹丸，最多三层', detail:'+1 PROJECTILE (MAX 3)'}
 ]);
 export const ENEMIES = Object.freeze({
   swarm: {hp:32, speed:29, radius:5, damage:6, score:10, fill:'#f46f85', attackWindup:0.46, attackRadius:11, attackReach:3, attackCooldown:0.93},
